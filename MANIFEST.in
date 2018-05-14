@@ -1,0 +1,1 @@
+include src/minerva_db/sparql/schema/*.rq
