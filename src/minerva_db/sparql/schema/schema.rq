@@ -1,0 +1,56 @@
+INSERT DATA {
+
+    :Subject rdf:type rdfs:Class .
+
+    :User rdfs:subClassOf :Subject .
+
+    :Group rdf:type rdfs:Class ;
+           rdfs:subClassOf :Subject .
+
+    :Resource rdf:type rdfs:Class .
+
+    :Permission rdf:type rdf:Property .
+
+    :Read rdf:type rdf:Property ;
+          rdfs:subPropertyOf :Permission .
+
+    :Write rdf:type rdf:Property ;
+           rdfs:subPropertyOf :Permission ;
+           :implies :Read .
+
+    :Admin rdf:type rdf:Property ;
+           rdfs:subPropertyOf :Permission ;
+           :implies :Write ,
+                    :Read .
+
+    :Repository rdf:type rdfs:Class ;
+                rdfs:subClassOf :Resource .
+
+    :Import rdf:type rdfs:Class ;
+            rdfs:subClassOf :Resource ;
+            rdfs:comment "Collection of data treated as a single block to import" .
+
+    :BFU rdf:type rdfs:Class ;
+         rdfs:subClassOf :Resource ;
+         rdfs:comment "Bio-Formats Unit" .
+
+    # :Fileset rdf:type rdfs:Class ;
+    #          rdfs:subClassOf :Resource ;
+    #          rdfs:comment "Collection of files" .
+
+    :File rdf:type rdfs:Class ;
+          rdfs:subClassOf :Resource ;
+          rdfs:comment "A file" .
+
+    :Image rdf:type rdfs:Class ;
+           rdfs:subClassOf :Resource ;
+           rdfs:comment "Bio-Formats Image" .
+
+    :name rdfs:comment "The name" .
+
+    :implies rdfs:comment "Permission implied by another permission" .
+
+    :memberOf rdfs:comment "Subject membership of a group, where a group can also be a subject" .
+
+    :inResource rdfs:comment "A resource within a resource" .
+}
