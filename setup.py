@@ -37,7 +37,7 @@ LICENSE = 'GPL-3.0'
 HOMEPAGE = 'https://github.com/sorgerlab/minerva-db'
 
 setup(
-    name='minerva-db-python',
+    name='minerva-db',
     version=VERSION,
     package_dir={'': 'src'},
     description=DESCRIPTION,
