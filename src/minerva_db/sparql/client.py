@@ -37,11 +37,9 @@ class Client():
         '''
 
         keys = ''.join(['''
-
             <{0}> rdf:type :File ;
                :key "{0}" ;
                :inResource ?import .
-
         '''.format(key) for key in keys])
 
         statement = PREFIX + '''
@@ -67,7 +65,7 @@ class Client():
 
         statement = PREFIX + '''
             INSERT {
-                ?user :memberOf ?group
+                ?user :memberOf ?group .
             } WHERE {
                 BIND (d:%s AS ?group)
                 ?group rdf:type :Group .
@@ -168,20 +166,26 @@ class Client():
 
         self.conn.update(statement)
 
-    def create_group(self, uuid: str, name: str):
-        '''Create a group.
+    def create_group(self, uuid: str, name: str, user: str):
+        '''Create a group with the specified user as a member.
 
         Args:
             uuid: UUID of the group.
             name: Name of the group.
+            user: UUID of the user to be the initial member.
         '''
 
         statement = PREFIX + '''
-            INSERT DATA {
-                d:%s rdf:type :Group ;
+            INSERT {
+                ?group rdf:type :Group ;
                        :name "%s" .
+                ?user :memberOf ?group .
+            } WHERE {
+                BIND(d:%s AS ?group)
+                BIND(cup:%s AS ?user)
+                ?user rdf:type :User .
             }
-        ''' % (uuid, name)
+        ''' % (name, uuid, user)
 
         self.conn.update(statement)
 
