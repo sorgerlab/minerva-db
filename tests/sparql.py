@@ -536,10 +536,26 @@ class TestIndividual():
         client.create_group(**group_somelab)
         client.create_user(**user_bob)
         client.create_user(**user_bill)
-
         client.add_users_to_group(group_somelab['uuid'], [user_bob['uuid'],
                                                           user_bill['uuid']])
 
         result = client.list_users_in_group(group_somelab['uuid'])
 
         assert_rowsets_equal(expected, result)
+
+    def test_is_member(self, client, group_somelab, user_bob):
+
+        client.create_group(**group_somelab)
+        client.create_user(**user_bob)
+        client.add_users_to_group(group_somelab['uuid'], [user_bob['uuid']])
+
+        assert client.is_member(user_bob['uuid'], group_somelab['uuid'])
+
+    def test_isnt_member(self, client, group_somelab, user_bob, user_bill):
+        client.create_group(**group_somelab)
+        client.create_user(**user_bob)
+        client.create_user(**user_bill)
+        client.add_users_to_group(group_somelab['uuid'], [user_bob['uuid']])
+
+        assert False is client.is_member(user_bill['uuid'],
+                                         group_somelab['uuid'])
