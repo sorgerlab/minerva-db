@@ -213,11 +213,12 @@ class TestIndividual():
         with pytest.raises(ValueError):
             client.describe_user(user_bob['uuid'])
 
-    def test_group(self, client, group_somelab):
+    def test_group(self, client, group_somelab, user_bob):
         keys = {'name'}
         expected = {k: group_somelab[k] for k in group_somelab.keys() & keys}
 
-        client.create_group(**group_somelab)
+        client.create_user(**user_bob)
+        client.create_group(user=user_bob['uuid'], **group_somelab)
 
         result = client.describe_group(group_somelab['uuid'])
         assert expected == result
@@ -533,11 +534,10 @@ class TestIndividual():
                                 user_bill):
         expected = [user_bob, user_bill]
 
-        client.create_group(**group_somelab)
         client.create_user(**user_bob)
         client.create_user(**user_bill)
-        client.add_users_to_group(group_somelab['uuid'], [user_bob['uuid'],
-                                                          user_bill['uuid']])
+        client.create_group(user=user_bob['uuid'], **group_somelab)
+        client.add_users_to_group(group_somelab['uuid'], [user_bill['uuid']])
 
         result = client.list_users_in_group(group_somelab['uuid'])
 
@@ -545,17 +545,16 @@ class TestIndividual():
 
     def test_is_member(self, client, group_somelab, user_bob):
 
-        client.create_group(**group_somelab)
         client.create_user(**user_bob)
-        client.add_users_to_group(group_somelab['uuid'], [user_bob['uuid']])
+        client.create_group(user=user_bob['uuid'], **group_somelab)
 
         assert client.is_member(user_bob['uuid'], group_somelab['uuid'])
 
     def test_isnt_member(self, client, group_somelab, user_bob, user_bill):
-        client.create_group(**group_somelab)
+
         client.create_user(**user_bob)
         client.create_user(**user_bill)
-        client.add_users_to_group(group_somelab['uuid'], [user_bob['uuid']])
+        client.create_group(user=user_bob['uuid'], **group_somelab)
 
         assert False is client.is_member(user_bill['uuid'],
                                          group_somelab['uuid'])
