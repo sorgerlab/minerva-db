@@ -20,20 +20,20 @@ class Client():
         self.conn = Connection(entrypoint)
 
     def _connection(self) -> Connection:
-        '''Get connection
+        '''Get connection.
 
         Returns:
-            The client's connection
+            The client's connection.
         '''
 
         return self.conn
 
     def add_files_to_import(self, keys: List[str], import_: str):
-        '''Create files within the specified import
+        '''Create files within the specified import.
 
         Args:
-            keys: UUID keys of the files
-            import_: UUID of the import
+            keys: UUID keys of the files.
+            import_: UUID of the import.
         '''
 
         keys = ''.join(['''
@@ -56,11 +56,11 @@ class Client():
         self.conn.update(statement)
 
     def add_users_to_group(self, group: str, users: List[str]):
-        '''Add users to the specified group
+        '''Add users to the specified group.
 
         Args:
-            group: UUID of the group
-            users: UUIDs of the users
+            group: UUID of the group.
+            users: UUIDs of the users.
         '''
 
         users = ' '.join(['cup:{}'.format(user) for user in users])
@@ -79,16 +79,16 @@ class Client():
         self.conn.update(statement)
 
     def create_bfu(self, uuid: str, name: str, keys: List[str], import_: str):
-        '''Create a BFU within the specified import
+        '''Create a BFU within the specified import.
 
         Associates the given files.
 
         Args:
-            uuid: UUID of the BFU
-            name: Name of the BFU
+            uuid: UUID of the BFU.
+            name: Name of the BFU.
             keys: Keys of the associated files, the first entry is
-                the entrypoint
-            import_: UUID of the import
+                the entrypoint.
+            import_: UUID of the import.
         '''
 
         keys = ['<{}>'.format(key) for key in keys]
@@ -119,14 +119,14 @@ class Client():
 
     def create_image(self, uuid: str, name: str, key: str, pyramid_levels: int,
                      bfu: str):
-        '''Create image within the specified BFU
+        '''Create image within the specified BFU.
 
         Args:
-            uuid : UUID of the image
-            name: Name of the import
-            key: Prefix key of the image
-            pyramid_levels: Number of pyramid levels
-            bfu: UUID of the BFU
+            uuid : UUID of the image.
+            name: Name of the import.
+            key: Prefix key of the image.
+            pyramid_levels: Number of pyramid levels.
+            bfu: UUID of the BFU.
         '''
 
         statement = PREFIX + '''
@@ -145,13 +145,13 @@ class Client():
         self.conn.update(statement)
 
     def create_import(self, uuid: str, name: str, key: str, repository: str):
-        '''Create an import within the specified repository
+        '''Create an import within the specified repository.
 
         Args:
-            uuid: UUID of the import
-            name: Name of the import
-            key: Prefix key of the import
-            repository: UUID of the repository
+            uuid: UUID of the import.
+            name: Name of the import.
+            key: Prefix key of the import.
+            repository: UUID of the repository.
         '''
 
         statement = PREFIX + '''
@@ -169,11 +169,11 @@ class Client():
         self.conn.update(statement)
 
     def create_group(self, uuid: str, name: str):
-        '''Create a group
+        '''Create a group.
 
         Args:
-            uuid: UUID of the group
-            name: Name of the group
+            uuid: UUID of the group.
+            name: Name of the group.
         '''
 
         statement = PREFIX + '''
@@ -186,12 +186,12 @@ class Client():
         self.conn.update(statement)
 
     def create_repository(self, uuid: str, name: str, user: str):
-        '''Create a repository with the specified user as an admin
+        '''Create a repository with the specified user as an admin.
 
         Args:
-            uuid: UUID of the repository
-            name: Name of the repository
-            user: UUID of the user to be initial admin
+            uuid: UUID of the repository.
+            name: Name of the repository.
+            user: UUID of the user to be initial admin.
         '''
 
         statement = PREFIX + '''
@@ -209,12 +209,12 @@ class Client():
         self.conn.update(statement)
 
     def create_user(self, uuid: str, name: str, email: str):
-        '''Create a user
+        '''Create a user.
 
         Args:
-            uuid: UUID of the user
-            name: Name of the user
-            email: Email of the user
+            uuid: UUID of the user.
+            name: Name of the user.
+            email: Email of the user.
         '''
 
         statement = PREFIX + '''
@@ -228,16 +228,16 @@ class Client():
         self.conn.update(statement)
 
     def describe_bfu(self, uuid: str) -> Dict[str, str]:
-        '''Get details of the specified BFU
+        '''Get details of the specified BFU.
 
         Args:
-            uuid: UUID of the BFU
+            uuid: UUID of the BFU.
 
         Returns:
-            The BFU details
+            The BFU details.
 
         Raises:
-            ValueError: If there is not exactly one matching BFU
+            ValueError: If there is not exactly one matching BFU.
         '''
 
         statement = PREFIX + '''
@@ -267,16 +267,16 @@ class Client():
         return row
 
     def describe_group(self, uuid: str) -> Dict[str, str]:
-        '''Get details of the specified group
+        '''Get details of the specified group.
 
         Args:
-            uuid: UUID of the group
+            uuid: UUID of the group.
 
         Returns:
-            The group details
+            The group details.
 
         Raises:
-            ValueError: If there is not exactly one matching group
+            ValueError: If there is not exactly one matching group.
         '''
 
         statement = PREFIX + '''
@@ -294,16 +294,16 @@ class Client():
         return rows[0]
 
     def describe_image(self, uuid: str) -> Dict[str, str]:
-        '''Get details of the specified image
+        '''Get details of the specified image.
 
         Args:
-            uuid: UUID of the image
+            uuid: UUID of the image.
 
         Returns:
-            The image details
+            The image details.
 
         Raises:
-            ValueError: If there is not exactly one matching image
+            ValueError: If there is not exactly one matching image.
         '''
 
         statement = PREFIX + '''
@@ -333,16 +333,16 @@ class Client():
         return row
 
     def describe_import(self, uuid: str) -> Dict[str, str]:
-        '''Get details of the specified import
+        '''Get details of the specified import.
 
         Args:
-            uuid: UUID of the import
+            uuid: UUID of the import.
 
         Returns:
-            The import details
+            The import details.
 
         Raises:
-            ValueError: If there is not exactly one matching import
+            ValueError: If there is not exactly one matching import.
         '''
 
         statement = PREFIX + '''
@@ -368,16 +368,16 @@ class Client():
         return row
 
     def describe_repository(self, uuid: str) -> Dict[str, str]:
-        '''Get details of the specified repository
+        '''Get details of the specified repository.
 
         Args:
-            uuid: UUID of the repository
+            uuid: UUID of the repository.
 
         Returns:
-            The repository details
+            The repository details.
 
         Raises:
-            ValueError: If there is not exactly one matching repository
+            ValueError: If there is not exactly one matching repository.
         '''
 
         statement = PREFIX + '''
@@ -395,16 +395,16 @@ class Client():
         return rows[0]
 
     def describe_user(self, uuid: str) -> Dict[str, str]:
-        '''Get details of the specified user
+        '''Get details of the specified user.
 
         Args:
-            uuid: UUID of the user
+            uuid: UUID of the user.
 
         Returns:
-            The user details
+            The user details.
 
         Raises:
-            ValueError: If there is not exactly one matching group
+            ValueError: If there is not exactly one matching group.
         '''
 
         statement = PREFIX + '''
@@ -436,10 +436,10 @@ class Client():
                 True.
             permission: Sought permission. Defaults to 'Read'
             raw_resource: Indicates the resource should not have a prexix
-                added. Defaults to False
+                added. Defaults to False.
 
         Returns:
-            If user has permission or not
+            If user has permission or not.
         '''
 
         # Prefix/parenthesize resource as necessary
@@ -468,18 +468,41 @@ class Client():
             }
         ''' % (user, resource, permission)
 
-        print(statement)
+        return self.conn.ask(statement)
+
+    def is_member(self, user: str, group: str = None) -> bool:
+        '''Determine if a user is a member of a group.
+
+        User can be a member of a group.
+        User can be a member of a group that is a member of a group, etc.
+
+        Args:
+            user: UUID of the user.
+            group: UUID of the group.
+
+        Returns:
+            If user is a member or not.
+        '''
+
+        statement = PREFIX + '''
+            ASK {
+                BIND(cup:%s AS ?user)
+                BIND(d:%s AS ?group)
+                ?group rdf:type :Group .
+                ?user :memberOf+ ?group .
+            }
+        ''' % (user, group)
 
         return self.conn.ask(statement)
 
     def list_bfus_in_import(self, uuid: str) -> List[Dict[str, str]]:
-        '''List BFUs in the specified import
+        '''List BFUs in the specified import.
 
         Args:
-            uuid: UUID of the import
+            uuid: UUID of the import.
 
         Returns:
-            The list of BFUs (with details) in the import
+            The list of BFUs (with details) in the import.
         '''
 
         statement = PREFIX + '''
@@ -506,13 +529,13 @@ class Client():
         return rows
 
     def list_files_in_bfu(self, uuid: str) -> List[Dict[str, str]]:
-        '''List files in the specified BFU
+        '''List files in the specified BFU.
 
         Args:
-            uuid: UUID of the BFU
+            uuid: UUID of the BFU.
 
         Returns:
-            The list of files (with details) in the BFU
+            The list of files (with details) in the BFU.
         '''
 
         statement = PREFIX + '''
@@ -539,13 +562,13 @@ class Client():
         return rows
 
     def list_files_in_import(self, uuid: str) -> List[Dict[str, str]]:
-        '''List files in the specified import
+        '''List files in the specified import.
 
         Args:
-            uuid: UUID of the import
+            uuid: UUID of the import.
 
         Returns:
-            The list of files (with details) in the import
+            The list of files (with details) in the import.
         '''
 
         statement = PREFIX + '''
@@ -564,13 +587,13 @@ class Client():
         return rows
 
     def list_imports_in_repository(self, uuid: str) -> List[Dict[str, str]]:
-        '''List imports in the specified repository
+        '''List imports in the specified repository.
 
         Args:
-            uuid: UUID of the repository
+            uuid: UUID of the repository.
 
         Returns:
-            The list of imports (with details) in the repository
+            The list of imports (with details) in the repository.
         '''
 
         statement = PREFIX + '''
@@ -594,13 +617,13 @@ class Client():
         return rows
 
     def list_users_in_group(self, uuid: str) -> List[Dict[str, str]]:
-        '''List users in the specified group
+        '''List users in the specified group.
 
         Args:
-            uuid: UUID of the group
+            uuid: UUID of the group.
 
         Returns:
-            The list of users (with details) in the group
+            The list of users (with details) in the group.
         '''
 
         statement = PREFIX + '''
