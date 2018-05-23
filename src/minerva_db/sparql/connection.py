@@ -3,12 +3,14 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 
 class Connection:
 
-    def __init__(self, endpoint):
+    def __init__(self, endpoint, endpoint_ro=None):
         self.endpoint = endpoint
+        self.endpoint_ro = endpoint_ro
 
     def execute(self, statement: str, update: bool = False):
 
-        sparql = SPARQLWrapper(self.endpoint, self.endpoint + '/statements')
+        sparql = SPARQLWrapper(self.endpoint_ro or self.endpoint,
+                               self.endpoint + '/statements')
         sparql.setQuery(statement)
         sparql.setReturnFormat(JSON)
 

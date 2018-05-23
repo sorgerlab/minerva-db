@@ -16,8 +16,8 @@ SCHEMA = pkg_resources.resource_string(
 
 class Client():
 
-    def __init__(self, entrypoint: str):
-        self.conn = Connection(entrypoint)
+    def __init__(self, entrypoint: str, entrypoint_ro: str = None):
+        self.conn = Connection(entrypoint, entrypoint_ro)
 
     def _connection(self) -> Connection:
         '''Get connection.
