@@ -171,6 +171,7 @@ class Client():
                 d:%s rdf:type :Import ;
                      :name "%s" ;
                      :key "%s" ;
+                     :complete false ;
                      :inResource ?repo .
             } WHERE {
                 BIND (d:%s AS ?repo)
@@ -364,11 +365,12 @@ class Client():
         '''
 
         statement = PREFIX + '''
-            SELECT ?name ?key ?repository
+            SELECT ?name ?key ?complete ?repository
             WHERE {
                 d:%s rdf:type :Import ;
                      :name ?name ;
                      :key ?key ;
+                     :complete ?complete ;
                      :inResource ?repository .
                 ?repository rdf:type :Repository .
             }
@@ -382,6 +384,9 @@ class Client():
 
         # Remove the prefix
         row['repository'] = row['repository'].split('#')[1]
+
+        # Convert complete to boolean
+        row['complete'] = row['complete'] == 'true'
 
         return row
 
@@ -573,7 +578,7 @@ class Client():
         # Set entrypoint to always have a boolean value
         for row in rows:
             if 'entrypoint' in row:
-                row['entrypoint'] = bool(row['entrypoint'])
+                row['entrypoint'] = row['entrypoint'] == 'true'
             else:
                 row['entrypoint'] = False
 
@@ -615,22 +620,26 @@ class Client():
         '''
 
         statement = PREFIX + '''
-            SELECT (?import AS ?uuid) ?name ?key
+            SELECT (?import AS ?uuid) ?name ?key ?complete
             WHERE {
                 BIND (d:%s AS ?repository)
                 ?repository rdf:type :Repository .
                 ?import rdf:type :Import ;
                         :inResource ?repository ;
                         :name ?name ;
-                        :key ?key .
+                        :key ?key ;
+                        :complete ?complete .
             }
         ''' % uuid
 
         header, rows = self.conn.query(statement)
 
-        # Remove the prefixes
         for row in rows:
+            # Remove the prefix
             row['uuid'] = row['uuid'].split('#')[1]
+
+            # Convert complete to boolean
+            row['complete'] = row['complete'] == 'true'
 
         return rows
 
@@ -663,3 +672,25 @@ class Client():
             row['uuid'] = row['uuid'].split('#')[1]
 
         return rows
+
+    def set_import_complete(self, uuid: str, complete: Optional[bool] = True):
+        '''Mark an import as complete.
+
+        Args:
+            uuid: UUID of the import.
+        '''
+
+        statement = PREFIX + '''
+            DELETE { ?import :complete ?prevComplete }
+            INSERT { ?import :complete ?newComplete }
+            WHERE {
+                BIND(d:%s AS ?import)
+                BIND(%s AS ?prevComplete)
+                BIND(%s AS ?newComplete)
+                ?import rdf:type :Import ;
+                        :complete ?prevComplete
+            }
+
+        ''' % (uuid, str(not complete).lower(), str(complete).lower())
+
+        self.conn.update(statement)
