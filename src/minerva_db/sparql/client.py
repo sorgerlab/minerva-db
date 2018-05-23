@@ -16,7 +16,7 @@ SCHEMA = pkg_resources.resource_string(
 
 class Client():
 
-    def __init__(self, entrypoint: str, entrypoint_ro: str = None):
+    def __init__(self, entrypoint: str, entrypoint_ro: Optional[str] = None):
         self.conn = Connection(entrypoint, entrypoint_ro)
 
     def _connection(self) -> Connection:
@@ -27,6 +27,20 @@ class Client():
         '''
 
         return self.conn
+
+    def _init_db(self, extra: Optional[str] = None):
+        '''Clear and initialise the database.
+
+        Args:
+            extra: Optional statement to execute. Does not get prefixed.
+
+        Not to be used by ordinary client usage.
+        '''
+
+        self.conn.update(PREFIX + 'DELETE WHERE { ?s ?p ?o }')
+        self.conn.update(PREFIX + SCHEMA)
+        if extra is not None:
+            self.conn.update(extra)
 
     def add_files_to_import(self, keys: List[str], import_: str):
         '''Create files within the specified import.

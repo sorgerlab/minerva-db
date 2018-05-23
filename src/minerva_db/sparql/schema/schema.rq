@@ -34,10 +34,6 @@ INSERT DATA {
          rdfs:subClassOf :Resource ;
          rdfs:comment "Bio-Formats Unit" .
 
-    # :Fileset rdf:type rdfs:Class ;
-    #          rdfs:subClassOf :Resource ;
-    #          rdfs:comment "Collection of files" .
-
     :File rdf:type rdfs:Class ;
           rdfs:subClassOf :Resource ;
           rdfs:comment "A file" .
