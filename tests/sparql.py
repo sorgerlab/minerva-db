@@ -154,7 +154,8 @@ def import_import1():
     return {
         'uuid': 'import1',
         'name': 'Import One',
-        'key': 's3://raw/import1'
+        'key': 's3://raw/import1',
+        'complete': False
     }
 
 
@@ -284,7 +285,7 @@ class TestIndividual():
             client.describe_repository(repository_repo1['uuid'])
 
     def test_import(self, client, import_import1, repository_repo1, user_bob):
-        keys = {'name', 'key'}
+        keys = {'name', 'key', 'complete'}
         expected = {
             **{k: import_import1[k] for k in import_import1.keys() & keys},
             'repository': repository_repo1['uuid']
@@ -292,8 +293,10 @@ class TestIndividual():
 
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
 
         result = client.describe_import(import_import1['uuid'])
         assert expected == result
@@ -308,8 +311,10 @@ class TestIndividual():
 
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
 
         result = client.list_files_in_import(import_import1['uuid'])
@@ -327,8 +332,10 @@ class TestIndividual():
 
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
         client.create_bfu(import_=import_import1['uuid'], keys=files_dv1,
                           **bfu_dv1)
@@ -348,8 +355,10 @@ class TestIndividual():
 
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
         client.create_bfu(import_=import_import1['uuid'], keys=files_dv1,
                           **bfu_dv1)
@@ -368,8 +377,10 @@ class TestIndividual():
 
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
         client.create_bfu(import_=import_import1['uuid'], keys=files_dv1,
                           **bfu_dv1)
@@ -391,10 +402,14 @@ class TestIndividual():
 
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
 
         result = client.list_imports_in_repository(repository_repo1['uuid'])
+        print(expected)
+        print(result)
         assert_rowsets_equal(expected, result)
 
     def test_bfus_in_import(self, client, bfu_dv1, files_dv1, import_import1,
@@ -403,8 +418,10 @@ class TestIndividual():
 
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
         client.create_bfu(import_=import_import1['uuid'], keys=files_dv1,
                           **bfu_dv1)
@@ -436,8 +453,10 @@ class TestIndividual():
                                         repository_repo1, user_bob):
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
 
         assert client.has_user_permission(user_bob['uuid'],
                                           import_import1['uuid'],
@@ -449,8 +468,10 @@ class TestIndividual():
         client.create_user(**user_bob)
         client.create_user(**user_bill)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
 
         assert False is client.has_user_permission(user_bill['uuid'],
                                                    import_import1['uuid'],
@@ -460,8 +481,10 @@ class TestIndividual():
                                       repository_repo1, user_bob):
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
 
         assert client.has_user_permission(user_bob['uuid'],
@@ -475,8 +498,10 @@ class TestIndividual():
         client.create_user(**user_bob)
         client.create_user(**user_bill)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
 
         assert False is client.has_user_permission(user_bill['uuid'],
@@ -489,8 +514,10 @@ class TestIndividual():
                                      user_bob):
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
         client.create_bfu(import_=import_import1['uuid'], keys=files_dv1,
                           **bfu_dv1)
@@ -505,8 +532,10 @@ class TestIndividual():
         client.create_user(**user_bob)
         client.create_user(**user_bill)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
         client.create_bfu(import_=import_import1['uuid'], keys=files_dv1,
                           **bfu_dv1)
@@ -520,8 +549,10 @@ class TestIndividual():
                                        repository_repo1, user_bob):
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
         client.create_bfu(import_=import_import1['uuid'], keys=files_dv1,
                           **bfu_dv1)
@@ -540,8 +571,10 @@ class TestIndividual():
         client.create_user(**user_bob)
         client.create_user(**user_bill)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(repository=repository_repo1['uuid'],
-                             **import_import1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
         client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
         client.create_bfu(import_=import_import1['uuid'], keys=files_dv1,
                           **bfu_dv1)
@@ -599,3 +632,24 @@ class TestIndividual():
 
         assert False is client.is_member(user_bill['uuid'],
                                          group_somelab['uuid'])
+
+    def test_import_complete(self, client, import_import1, repository_repo1,
+                             user_bob):
+        keys = {'name', 'key', 'complete'}
+        expected = {
+            **{k: import_import1[k] for k in import_import1.keys() & keys},
+            'repository': repository_repo1['uuid']
+        }
+        expected['complete'] = True
+
+        client.create_user(**user_bob)
+        client.create_repository(user=user_bob['uuid'], **repository_repo1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
+
+        client.set_import_complete(import_import1['uuid'])
+
+        result = client.describe_import(import_import1['uuid'])
+        assert expected == result

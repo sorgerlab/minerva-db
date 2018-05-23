@@ -44,6 +44,8 @@ INSERT DATA {
 
     :name rdfs:comment "The name" .
 
+    :complete rdfs:comment "Completed status of a resource. For an import this means whether the user is done uploading. For a BFU it means that its images have been fully imported" .
+
     :implies rdfs:comment "Permission implied by another permission" .
 
     :memberOf rdfs:comment "Subject membership of a group, where a group can also be a subject" .
