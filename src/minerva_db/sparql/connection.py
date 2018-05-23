@@ -3,7 +3,7 @@ from SPARQLWrapper import SPARQLWrapper, JSON
 
 class Connection:
 
-    def __init__(self, endpoint, endpoint_ro=None):
+    def __init__(self, endpoint: str, endpoint_ro: str = None):
         self.endpoint = endpoint
         self.endpoint_ro = endpoint_ro
 

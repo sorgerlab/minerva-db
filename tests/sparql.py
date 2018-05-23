@@ -200,6 +200,47 @@ class TestIndividual():
             WHERE { ?s ?p ?o . }
         ''')
 
+    def test_init_db(self, client):
+        expected_header, expected_rows = client._connection().query('''
+            SELECT ?s ?p ?o
+            WHERE { ?s ?p ?o . }
+        ''')
+
+        client._init_db()
+
+        result_header, result_rows = client._connection().query('''
+            SELECT ?s ?p ?o
+            WHERE { ?s ?p ?o . }
+        ''')
+
+        assert_rowsets_equal(expected_rows, result_rows)
+
+    def test_init_db_extra(self, client, prefix):
+        expected_header, expected_rows = client._connection().query('''
+            SELECT ?s ?p ?o
+            WHERE { ?s ?p ?o . }
+        ''')
+
+        triple = ('http://test#test0', 'http://test#test1',
+                  'http://test#test2')
+
+        expected_rows += [{'s': triple[0], 'p': triple[1], 'o': triple[2]}]
+
+        extra = '''
+            INSERT DATA {
+                <%s> <%s> <%s> .
+            }
+        ''' % triple
+
+        client._init_db(extra)
+
+        result_header, result_rows = client._connection().query('''
+            SELECT ?s ?p ?o
+            WHERE { ?s ?p ?o . }
+        ''')
+
+        assert_rowsets_equal(expected_rows, result_rows)
+
     def test_user(self, client, user_bob):
         keys = {'name', 'email'}
         expected = {k: user_bob[k] for k in user_bob.keys() & keys}
