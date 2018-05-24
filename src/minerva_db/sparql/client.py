@@ -76,7 +76,8 @@ class Client():
 
         self.conn.update(statement)
 
-    def create_bfu(self, uuid: str, name: str, keys: List[str], import_: str):
+    def create_bfu(self, uuid: str, name: str, reader: str,
+                   keys: List[str], import_: str):
         '''Create a BFU within the specified import.
 
         Associates the given files.
@@ -84,6 +85,7 @@ class Client():
         Args:
             uuid: UUID of the BFU.
             name: Name of the BFU.
+            reader: Bio-Formats reader used to read the BFU.
             keys: Keys of the associated files, the first entry is
                 the entrypoint.
             import_: UUID of the import.
@@ -97,6 +99,7 @@ class Client():
             INSERT {
                 ?bfu rdf:type :BFU ;
                      :name "%s" ;
+                     :reader "%s" ;
                      :inResource ?import .
                 ?file :inResource ?bfu .
                 ?entrypoint :entrypoint true .
@@ -111,7 +114,7 @@ class Client():
                 ?entrypoint rdf:type :File ;
                             :inResource ?import .
             }
-        ''' % (name, uuid, import_, entrypoint, keys)
+        ''' % (name, reader, uuid, import_, entrypoint, keys)
 
         self.conn.update(statement)
 
@@ -245,11 +248,12 @@ class Client():
         '''
 
         statement = PREFIX + '''
-            SELECT ?name ?import (?key AS ?entrypoint)
+            SELECT ?name ?reader ?import (?key AS ?entrypoint)
             WHERE {
                 BIND (d:%s AS ?bfu)
                 ?bfu rdf:type :BFU ;
                      :name ?name ;
+                     :reader ?reader ;
                      :inResource ?import .
                 ?import rdf:type :Import .
                 ?file rdf:type :File ;
@@ -510,13 +514,14 @@ class Client():
         '''
 
         statement = PREFIX + '''
-            SELECT (?bfu AS ?uuid) ?name (?key AS ?entrypoint)
+            SELECT (?bfu AS ?uuid) ?name ?reader (?key AS ?entrypoint)
             WHERE {
                 BIND (d:%s AS ?import)
                 ?import rdf:type :Import .
                 ?bfu rdf:type :BFU ;
                      :inResource ?import ;
-                     :name ?name .
+                     :name ?name ;
+                     :reader ?reader .
                 ?file rdf:type :File ;
                       :inResource ?bfu ;
                       :entrypoint true ;

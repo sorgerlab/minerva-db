@@ -170,7 +170,8 @@ def files_dv1():
 def bfu_dv1():
     return {
         'uuid': 'bfu1',
-        'name': 'BFU One'
+        'name': 'BFU One',
+        'reader': 'loci.formats.in.DeltavisionReader'
     }
 
 
@@ -277,7 +278,7 @@ class TestIndividual():
 
     def test_bfu(self, client, bfu_dv1, files_dv1, import_import1,
                  repository_repo1, user_bob):
-        keys = {'name', 'key'}
+        keys = {'name', 'key', 'reader'}
         expected = {
             **{k: bfu_dv1[k] for k in bfu_dv1.keys() & keys},
             'import': import_import1['uuid'],
