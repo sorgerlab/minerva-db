@@ -397,6 +397,31 @@ class TestIndividual():
         with pytest.raises(ValueError):
             client.describe_user(image_dv1['uuid'])
 
+    def test_images_in_bfu(self, client, image_dv1, bfu_dv1, files_dv1,
+                           import_import1, repository_repo1, user_bob):
+        keys = {'uuid', 'name', 'key', 'pyramidLevels'}
+        expected = [{
+            **{k: image_dv1[k] for k in image_dv1.keys() & keys},
+            'bfu': bfu_dv1['uuid']
+        }]
+
+        client.create_user(**user_bob)
+        client.create_repository(user=user_bob['uuid'], **repository_repo1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
+        client.add_files_to_import(files_dv1, import_=import_import1['uuid'])
+        client.create_bfu(import_=import_import1['uuid'], keys=files_dv1,
+                          **bfu_dv1)
+        client.create_image(image_dv1['uuid'], image_dv1['name'],
+                            image_dv1['key'], image_dv1['pyramidLevels'],
+                            bfu_dv1['uuid'])
+
+        result = client.list_images_in_bfu(bfu_dv1['uuid'])
+
+        assert_rowsets_equal(expected, result)
+
     def test_imports_in_repository(self, client, import_import1,
                                    repository_repo1, user_bob):
         expected = [import_import1]
