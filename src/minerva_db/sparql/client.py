@@ -589,6 +589,42 @@ class Client():
 
         return rows
 
+    def list_images_in_bfu(self, uuid: str) -> List[Dict[str, str]]:
+        '''List images in the specified BFU.
+
+        Args:
+            uuid: UUID of the BFU.
+
+        Returns:
+            The list of images (with details) in the BFU.
+        '''
+
+        statement = PREFIX + '''
+            SELECT (?image AS ?uuid) ?name ?key ?pyramidLevels ?bfu
+            WHERE {
+                BIND (d:%s AS ?bfu)
+                ?bfu rdf:type :BFU .
+                ?image rdf:type :Image ;
+                      :inResource ?bfu ;
+                      :name ?name ;
+                      :key ?key ;
+                      :pyramidLevels ?pyramidLevels .
+            }
+        ''' % uuid
+
+        header, rows = self.conn.query(statement)
+
+        for row in rows:
+
+            # Remove the prefixes
+            row['uuid'] = row['uuid'].split('#')[1]
+            row['bfu'] = row['bfu'].split('#')[1]
+
+            # Parse the int
+            row['pyramidLevels'] = int(row['pyramidLevels'])
+
+        return rows
+
     def list_files_in_import(self, uuid: str) -> List[Dict[str, str]]:
         '''List files in the specified import.
 
