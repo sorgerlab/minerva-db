@@ -150,6 +150,14 @@ def repository_repo1():
 
 
 @pytest.fixture
+def repository_repo2():
+    return {
+        'uuid': 'repo2',
+        'name': 'Repository Two'
+    }
+
+
+@pytest.fixture
 def import_import1():
     return {
         'uuid': 'import1',
@@ -244,8 +252,7 @@ class TestIndividual():
         assert_rowsets_equal(expected_rows, result_rows)
 
     def test_user(self, client, user_bob):
-        keys = {'name', 'email'}
-        expected = {k: user_bob[k] for k in user_bob.keys() & keys}
+        expected = user_bob
 
         client.create_user(**user_bob)
 
@@ -257,8 +264,7 @@ class TestIndividual():
             client.describe_user(user_bob['uuid'])
 
     def test_group(self, client, group_somelab, user_bob):
-        keys = {'name'}
-        expected = {k: group_somelab[k] for k in group_somelab.keys() & keys}
+        expected = group_somelab
 
         client.create_user(**user_bob)
         client.create_group(user=user_bob['uuid'], **group_somelab)
@@ -271,9 +277,7 @@ class TestIndividual():
             client.describe_group(group_somelab['uuid'])
 
     def test_repository(self, client, repository_repo1, user_bob):
-        keys = {'name'}
-        expected = {k: repository_repo1[k]
-                    for k in repository_repo1.keys() & keys}
+        expected = repository_repo1
 
         client.create_user(**user_bob)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
@@ -285,10 +289,22 @@ class TestIndividual():
         with pytest.raises(ValueError):
             client.describe_repository(repository_repo1['uuid'])
 
+    def test_repositories_for_user(self, client, repository_repo1,
+                                   repository_repo2, user_bob, user_bill):
+        expected = [repository_repo1]
+
+        client.create_user(**user_bob)
+        client.create_user(**user_bill)
+        client.create_repository(user=user_bob['uuid'], **repository_repo1)
+        client.create_repository(user=user_bill['uuid'], **repository_repo2)
+
+        result = client.list_repositories_for_user(user_bob['uuid'])
+
+        assert_rowsets_equal(expected, result)
+
     def test_import(self, client, import_import1, repository_repo1, user_bob):
-        keys = {'name', 'key', 'complete'}
         expected = {
-            **{k: import_import1[k] for k in import_import1.keys() & keys},
+            **import_import1,
             'repository': repository_repo1['uuid']
         }
 
@@ -305,6 +321,26 @@ class TestIndividual():
     def test_import_nonexistant(self, client, import_import1):
         with pytest.raises(ValueError):
             client.describe_import(import_import1['uuid'])
+
+    def test_import_complete(self, client, import_import1, repository_repo1,
+                             user_bob):
+        expected = {
+            **import_import1,
+            'repository': repository_repo1['uuid']
+        }
+        expected['complete'] = True
+
+        client.create_user(**user_bob)
+        client.create_repository(user=user_bob['uuid'], **repository_repo1)
+        client.create_import(uuid=import_import1['uuid'],
+                             name=import_import1['name'],
+                             key=import_import1['key'],
+                             repository=repository_repo1['uuid'])
+
+        client.set_import_complete(import_import1['uuid'])
+
+        result = client.describe_import(import_import1['uuid'])
+        assert expected == result
 
     def test_files_in_import(self, client, files_dv1, import_import1,
                              repository_repo1, user_bob):
@@ -324,9 +360,8 @@ class TestIndividual():
 
     def test_bfu(self, client, bfu_dv1, files_dv1, import_import1,
                  repository_repo1, user_bob):
-        keys = {'name', 'key', 'reader'}
         expected = {
-            **{k: bfu_dv1[k] for k in bfu_dv1.keys() & keys},
+            **bfu_dv1,
             'import': import_import1['uuid'],
             'entrypoint': files_dv1[0]
         }
@@ -370,9 +405,8 @@ class TestIndividual():
 
     def test_image(self, client, image_dv1, bfu_dv1, files_dv1, import_import1,
                    repository_repo1, user_bob):
-        keys = {'name', 'key', 'pyramidLevels'}
         expected = {
-            **{k: image_dv1[k] for k in image_dv1.keys() & keys},
+            **image_dv1,
             'bfu': bfu_dv1['uuid']
         }
 
@@ -399,9 +433,8 @@ class TestIndividual():
 
     def test_images_in_bfu(self, client, image_dv1, bfu_dv1, files_dv1,
                            import_import1, repository_repo1, user_bob):
-        keys = {'uuid', 'name', 'key', 'pyramidLevels'}
         expected = [{
-            **{k: image_dv1[k] for k in image_dv1.keys() & keys},
+            **image_dv1,
             'bfu': bfu_dv1['uuid']
         }]
 
@@ -434,8 +467,7 @@ class TestIndividual():
                              repository=repository_repo1['uuid'])
 
         result = client.list_imports_in_repository(repository_repo1['uuid'])
-        print(expected)
-        print(result)
+
         assert_rowsets_equal(expected, result)
 
     def test_bfus_in_import(self, client, bfu_dv1, files_dv1, import_import1,
@@ -658,24 +690,3 @@ class TestIndividual():
 
         assert False is client.is_member(user_bill['uuid'],
                                          group_somelab['uuid'])
-
-    def test_import_complete(self, client, import_import1, repository_repo1,
-                             user_bob):
-        keys = {'name', 'key', 'complete'}
-        expected = {
-            **{k: import_import1[k] for k in import_import1.keys() & keys},
-            'repository': repository_repo1['uuid']
-        }
-        expected['complete'] = True
-
-        client.create_user(**user_bob)
-        client.create_repository(user=user_bob['uuid'], **repository_repo1)
-        client.create_import(uuid=import_import1['uuid'],
-                             name=import_import1['name'],
-                             key=import_import1['key'],
-                             repository=repository_repo1['uuid'])
-
-        client.set_import_complete(import_import1['uuid'])
-
-        result = client.describe_import(import_import1['uuid'])
-        assert expected == result
