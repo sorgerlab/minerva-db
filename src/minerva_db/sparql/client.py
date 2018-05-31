@@ -52,8 +52,8 @@ class Client():
 
         keys = ''.join(['''
             <{0}> rdf:type :File ;
-               :key "{0}" ;
-               :inResource ?import .
+                  :key "{0}" ;
+                  :inResource ?import .
         '''.format(key) for key in keys])
 
         statement = PREFIX + '''
@@ -263,7 +263,7 @@ class Client():
         '''
 
         statement = PREFIX + '''
-            SELECT ?name ?reader ?import (?key AS ?entrypoint)
+            SELECT (?bfu AS ?uuid) ?name ?reader ?import (?key AS ?entrypoint)
             WHERE {
                 BIND (d:%s AS ?bfu)
                 ?bfu rdf:type :BFU ;
@@ -284,7 +284,8 @@ class Client():
 
         row = rows[0]
 
-        # Remove the prefix
+        # Remove the prefixes
+        row['uuid'] = row['uuid'].split('#')[1]
         row['import'] = row['import'].split('#')[1]
 
         return row
@@ -303,10 +304,11 @@ class Client():
         '''
 
         statement = PREFIX + '''
-            SELECT ?name
+            SELECT (?group AS ?uuid) ?name
             WHERE {
-                d:%s rdf:type :Group ;
-                     :name ?name .
+                BIND (d:%s AS ?group)
+                ?group rdf:type :Group ;
+                       :name ?name .
             }
         ''' % uuid
 
@@ -314,7 +316,12 @@ class Client():
         if len(rows) == 0:
             raise ValueError('Group ({}) not found'.format(uuid))
 
-        return rows[0]
+        row = rows[0]
+
+        # Remove the prefix
+        row['uuid'] = row['uuid'].split('#')[1]
+
+        return row
 
     def describe_image(self, uuid: str) -> Dict[str, str]:
         '''Get details of the specified image.
@@ -330,13 +337,14 @@ class Client():
         '''
 
         statement = PREFIX + '''
-            SELECT ?name ?key ?pyramidLevels ?bfu
+            SELECT (?image as ?uuid) ?name ?key ?pyramidLevels ?bfu
             WHERE {
-                d:%s rdf:type :Image ;
-                      :name ?name ;
-                      :key ?key ;
-                      :pyramidLevels ?pyramidLevels ;
-                      :inResource ?bfu .
+                BIND (d:%s AS ?image)
+                ?image rdf:type :Image ;
+                       :name ?name ;
+                       :key ?key ;
+                       :pyramidLevels ?pyramidLevels ;
+                       :inResource ?bfu .
                 ?bfu rdf:type :BFU .
             }
         ''' % uuid
@@ -347,7 +355,8 @@ class Client():
 
         row = rows[0]
 
-        # Remove the prefix
+        # Remove the prefixes
+        row['uuid'] = row['uuid'].split('#')[1]
         row['bfu'] = row['bfu'].split('#')[1]
 
         # Parse the int
@@ -369,13 +378,14 @@ class Client():
         '''
 
         statement = PREFIX + '''
-            SELECT ?name ?key ?complete ?repository
+            SELECT (?import AS ?uuid) ?name ?key ?complete ?repository
             WHERE {
-                d:%s rdf:type :Import ;
-                     :name ?name ;
-                     :key ?key ;
-                     :complete ?complete ;
-                     :inResource ?repository .
+                BIND (d:%s AS ?import)
+                ?import rdf:type :Import ;
+                        :name ?name ;
+                        :key ?key ;
+                        :complete ?complete ;
+                        :inResource ?repository .
                 ?repository rdf:type :Repository .
             }
         ''' % uuid
@@ -386,7 +396,8 @@ class Client():
 
         row = rows[0]
 
-        # Remove the prefix
+        # Remove the prefixes
+        row['uuid'] = row['uuid'].split('#')[1]
         row['repository'] = row['repository'].split('#')[1]
 
         # Convert complete to boolean
@@ -408,9 +419,10 @@ class Client():
         '''
 
         statement = PREFIX + '''
-            SELECT ?name
+            SELECT (?repository AS ?uuid) ?name
             WHERE {
-                d:%s rdf:type :Repository ;
+                BIND (d:%s AS ?repository)
+                ?repository rdf:type :Repository ;
                      :name ?name .
             }
         ''' % uuid
@@ -419,7 +431,12 @@ class Client():
         if len(rows) == 0:
             raise ValueError('Repository ({}) not found'.format(uuid))
 
-        return rows[0]
+        row = rows[0]
+
+        # Remove the prefix
+        row['uuid'] = row['uuid'].split('#')[1]
+
+        return row
 
     def describe_user(self, uuid: str) -> Dict[str, str]:
         '''Get details of the specified user.
@@ -435,7 +452,7 @@ class Client():
         '''
 
         statement = PREFIX + '''
-            SELECT ?name ?email
+            SELECT (?user as ?uuid) ?name ?email
             WHERE {
                 BIND (cup:%s AS ?user)
                 ?user rdf:type :User ;
@@ -450,7 +467,12 @@ class Client():
         if len(rows) == 0:
             raise ValueError('User ({}) not found'.format(uuid))
 
-        return rows[0]
+        row = rows[0]
+
+        # Remove the prefix
+        row['uuid'] = row['uuid'].split('#')[1]
+
+        return row
 
     def has_user_permission(self, user: str, resource: str = None,
                             permission: Optional[str] = 'Read',
@@ -681,6 +703,42 @@ class Client():
 
             # Convert complete to boolean
             row['complete'] = row['complete'] == 'true'
+
+        return rows
+
+    def list_repositories_for_user(self, uuid: str) -> List[Dict[str, str]]:
+        '''List repositories that a user is a member of.
+
+        Args:
+            uuid: UUID of the user.
+
+        Returns:
+            The list of repositories (with details) the user is a member of.
+        '''
+
+        statement = PREFIX + '''
+            SELECT (?repository AS ?uuid) ?name
+            WHERE {
+                BIND(cup:%s AS ?user)
+                ?subjectType rdfs:subClassOf :Subject .
+                ?subject rdf:type ?subjectType .
+                ?user :memberOf* ?subject .
+
+                ?permission rdf:type rdf:Property ;
+                            rdfs:subPropertyOf :Permission .
+
+                ?subject ?permission ?repository .
+
+                ?repository rdf:type :Repository ;
+                            :name ?name .
+            }
+        ''' % uuid
+
+        header, rows = self.conn.query(statement)
+
+        for row in rows:
+            # Remove the prefix
+            row['uuid'] = row['uuid'].split('#')[1]
 
         return rows
 
