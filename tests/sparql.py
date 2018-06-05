@@ -123,14 +123,31 @@ def user_bob():
 def user_bill():
     return {
         'uuid': 'bill',
-        'name': 'Big Bob',
+        'name': 'Big Bill',
         'email': 'bill@example.com'
     }
 
 
-@pytest.fixture(params=['user_bob', 'user_bill'])
+@pytest.fixture
+def user_sally():
+    return {
+        'uuid': 'sally',
+        'name': 'Strong Sally',
+        'email': 'sally@example.com'
+    }
+
+
+@pytest.fixture(params=['user_bob', 'user_bill', 'user_sally'])
 def users(request):
     return request.getfixturevalue(request.param)
+
+
+@pytest.fixture
+def organization_org1():
+    return {
+        'uuid': 'org1',
+        'name': 'Organization One'
+    }
 
 
 @pytest.fixture
@@ -263,6 +280,19 @@ class TestIndividual():
         with pytest.raises(ValueError):
             client.describe_user(user_bob['uuid'])
 
+    def test_organization(self, client, organization_org1, user_bob):
+        expected = organization_org1
+
+        client.create_user(**user_bob)
+        client.create_organization(**organization_org1, user=user_bob['uuid'])
+
+        result = client.describe_organization(organization_org1['uuid'])
+        assert expected == result
+
+    def test_organization_nonexistant(self, client, organization_org1):
+        with pytest.raises(ValueError):
+            client.describe_organization(organization_org1['uuid'])
+
     def test_group(self, client, group_somelab, user_bob):
         expected = group_somelab
 
@@ -289,12 +319,32 @@ class TestIndividual():
         with pytest.raises(ValueError):
             client.describe_repository(repository_repo1['uuid'])
 
-    def test_repositories_for_user(self, client, repository_repo1,
-                                   repository_repo2, user_bob, user_bill):
-        expected = [repository_repo1]
+    def test_add_user_to_repository(self, client, repository_repo1, user_bob,
+                                    user_bill):
+        expected_admin = [{**repository_repo1, 'permissions': ['Admin']}]
+        expected_read = [{**repository_repo1, 'permissions': ['Read']}]
 
         client.create_user(**user_bob)
         client.create_user(**user_bill)
+        client.create_repository(user=user_bob['uuid'], **repository_repo1)
+
+        client.add_user_to_repository(repository_repo1['uuid'],
+                                      user_bill['uuid'],
+                                      ['Read'])
+        result_admin = client.list_repositories_for_user(user_bob['uuid'])
+        result_read = client.list_repositories_for_user(user_bill['uuid'])
+
+        assert_rowsets_equal(expected_admin, result_admin)
+        assert_rowsets_equal(expected_read, result_read)
+
+    def test_repositories_for_user(self, client, repository_repo1,
+                                   repository_repo2, user_bob, user_bill,
+                                   user_sally):
+        expected = [{**repository_repo1, 'permissions': ['Admin']}]
+
+        client.create_user(**user_bob)
+        client.create_user(**user_bill)
+        client.create_user(**user_sally)
         client.create_repository(user=user_bob['uuid'], **repository_repo1)
         client.create_repository(user=user_bill['uuid'], **repository_repo2)
 

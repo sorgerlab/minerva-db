@@ -7,6 +7,18 @@ INSERT DATA {
     :Group rdf:type rdfs:Class ;
            rdfs:subClassOf :Subject .
 
+    :Organization rdf:type rdfs:Class ;
+                  rdfs:subClassOf :Subject .
+
+    :Membership rdf:type rdf:Property .
+
+    :memberOf rdf:type rdf:Property ;
+              rdfs:subPropertyOf :Membership .
+
+    :ownerOf rdf:type rdf:Property ;
+             rdfs:subPropertyOf :Membership ;
+             :implies :memberOf .
+
     :Resource rdf:type rdfs:Class .
 
     :Permission rdf:type rdf:Property .
@@ -46,9 +58,9 @@ INSERT DATA {
 
     :complete rdfs:comment "Completed status of a resource. For an import this means whether the user is done uploading. For a BFU it means that its images have been fully imported" .
 
-    :implies rdfs:comment "Permission implied by another permission" .
+    :implies rdfs:comment "Property implied by another property" .
 
-    :memberOf rdfs:comment "Subject membership of a group, where a group can also be a subject" .
+    :memberOf rdfs:comment "Subject membership of a subject, where the membership can be of any subject except a user" .
 
     :inResource rdfs:comment "A resource within a resource" .
 }
