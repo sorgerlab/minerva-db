@@ -90,6 +90,34 @@ class Client():
 
         self.conn.update(statement)
 
+    def add_user_to_repository(self, repository: str, user: str,
+                               permissions: List[str]):
+        '''Add user to the specified repository.
+
+        Args:
+            repository: UUID of the repository.
+            user: UUID of the user.
+            permissions: Permissions to grant the user
+        '''
+
+        permissions = ' '.join([':{}'.format(permission)
+                                for permission in permissions])
+
+        statement = PREFIX + '''
+            INSERT {
+                ?user ?permission ?repository .
+            } WHERE {
+                BIND (d:%s AS ?repository)
+                BIND (cup:%s AS ?user)
+                ?repository rdf:type :Repository .
+                ?user rdf:type :User .
+                ?permission rdfs:subPropertyOf :Permission .
+                VALUES ?permission { %s }
+            }
+        ''' % (repository, user, permissions)
+
+        self.conn.update(statement)
+
     def create_bfu(self, uuid: str, name: str, reader: str,
                    keys: List[str], import_: str):
         '''Create a BFU within the specified import.
@@ -201,6 +229,29 @@ class Client():
             } WHERE {
                 BIND(d:%s AS ?group)
                 BIND(cup:%s AS ?user)
+                ?user rdf:type :User .
+            }
+        ''' % (name, uuid, user)
+
+        self.conn.update(statement)
+
+    def create_organization(self, uuid: str, name: str, user: str):
+        '''Create an organization with the specified user as an owner.
+
+        Args:
+            uuid: UUID of the organization.
+            name: Name of the organization.
+            user: UUID of the user to be initial owner.
+        '''
+
+        statement = PREFIX + '''
+            INSERT {
+                ?organization rdf:type :Organization ;
+                     :name "%s" .
+                ?user :ownerOf ?organization .
+            } WHERE {
+                BIND (d:%s AS ?organization)
+                BIND (cup:%s AS ?user)
                 ?user rdf:type :User .
             }
         ''' % (name, uuid, user)
@@ -405,6 +456,39 @@ class Client():
 
         return row
 
+    def describe_organization(self, uuid: str) -> Dict[str, str]:
+        '''Get details of the specified organization.
+
+        Args:
+            uuid: UUID of the organization.
+
+        Returns:
+            The organization details.
+
+        Raises:
+            ValueError: If there is not exactly one matching organization.
+        '''
+
+        statement = PREFIX + '''
+            SELECT (?organization as ?uuid) ?name
+            WHERE {
+                BIND (d:%s AS ?organization)
+                ?organization rdf:type :Organization ;
+                       :name ?name .
+            }
+        ''' % uuid
+
+        header, rows = self.conn.query(statement)
+        if len(rows) == 0:
+            raise ValueError('Organization ({}) not found'.format(uuid))
+
+        row = rows[0]
+
+        # Remove the prefix
+        row['uuid'] = row['uuid'].split('#')[1]
+
+        return row
+
     def describe_repository(self, uuid: str) -> Dict[str, str]:
         '''Get details of the specified repository.
 
@@ -448,7 +532,7 @@ class Client():
             The user details.
 
         Raises:
-            ValueError: If there is not exactly one matching group.
+            ValueError: If there is not exactly one matching user.
         '''
 
         statement = PREFIX + '''
@@ -456,7 +540,7 @@ class Client():
             WHERE {
                 BIND (cup:%s AS ?user)
                 ?user rdf:type :User ;
-                       :name ?name ;
+                       :name ?name .
                 OPTIONAL {
                     ?user :email ?email .
                 }
@@ -611,6 +695,36 @@ class Client():
 
         return rows
 
+    def list_groups_for_user(self, uuid: str) -> List[Dict[str, str]]:
+        '''List groups for the specified user.
+
+        Args:
+            uuid: UUID of the user.
+
+        Returns:
+            The list of groups (with details) the user is a member of.
+        '''
+
+        statement = PREFIX + '''
+            SELECT (?group AS ?uuid) ?name
+            WHERE {
+                BIND (cup:%s AS ?user)
+                ?group rdf:type :Group ;
+                       :name ?name .
+                ?user rdf:type :User ;
+                      :memberOf ?group .
+            }
+        '''
+
+        header, rows = self.conn.query(statement)
+
+        for row in rows:
+
+            # Remove the prefixes
+            row['uuid'] = row['uuid'].split('#')[1]
+
+        return rows
+
     def list_images_in_bfu(self, uuid: str) -> List[Dict[str, str]]:
         '''List images in the specified BFU.
 
@@ -707,31 +821,42 @@ class Client():
         return rows
 
     def list_repositories_for_user(self, uuid: str) -> List[Dict[str, str]]:
-        '''List repositories that a user is a member of.
+        '''List repositories that a user is a member of (with permissions).
 
         Args:
             uuid: UUID of the user.
 
         Returns:
-            The list of repositories (with details) the user is a member of.
+            The list of repositories (with details) the user is a member of
+            along with the permissions that the user has.
         '''
 
         statement = PREFIX + '''
-            SELECT (?repository AS ?uuid) ?name
+            SELECT (?repository AS ?uuid)
+                   ?name
+                   (group_concat(DISTINCT ?permission) AS ?permissions)
             WHERE {
                 BIND(cup:%s AS ?user)
                 ?subjectType rdfs:subClassOf :Subject .
                 ?subject rdf:type ?subjectType .
                 ?user :memberOf* ?subject .
 
-                ?permission rdf:type rdf:Property ;
-                            rdfs:subPropertyOf :Permission .
-
-                ?subject ?permission ?repository .
+                ?permission rdfs:subPropertyOf :Permission ;
+                            :implies* ?implied .
 
                 ?repository rdf:type :Repository ;
                             :name ?name .
+
+                ?subject ?permission ?repository .
+
+                FILTER NOT EXISTS {
+                    ?subject ?impliedOnly ?resource .
+                    ?impliedOnly :implies+ ?implied ;
+                                 rdfs:subPropertyOf :Permission .
+                }
             }
+            GROUP BY ?repository ?name
+            HAVING (bound(?repository))
         ''' % uuid
 
         header, rows = self.conn.query(statement)
@@ -739,6 +864,11 @@ class Client():
         for row in rows:
             # Remove the prefix
             row['uuid'] = row['uuid'].split('#')[1]
+
+            # Split and remove prefix of permissions
+            row['permissions'] = [permission.split('#')[1]
+                                  for permission
+                                  in row['permissions'].split()]
 
         return rows
 
