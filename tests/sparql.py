@@ -319,6 +319,26 @@ class TestIndividual():
         with pytest.raises(ValueError):
             client.describe_repository(repository_repo1['uuid'])
 
+    def test_add_group_to_repository(self, client, repository_repo1, user_bob,
+                                     user_bill, group_somelab):
+        expected_admin = [{**repository_repo1, 'permissions': ['Admin']}]
+        expected_read = [{**repository_repo1, 'permissions': ['Read']}]
+
+        client.create_user(**user_bob)
+        client.create_user(**user_bill)
+        client.create_group(**group_somelab, user=user_bill['uuid'])
+        client.create_repository(user=user_bob['uuid'], **repository_repo1)
+
+        client.add_group_to_repository(repository_repo1['uuid'],
+                                       group_somelab['uuid'],
+                                       ['Read'])
+        result_admin = client.list_repositories_for_user(user_bob['uuid'])
+        # TODO Test that the group was added to the repository more directly
+        result_read = client.list_repositories_for_user(user_bill['uuid'])
+
+        assert_rowsets_equal(expected_admin, result_admin)
+        assert_rowsets_equal(expected_read, result_read)
+
     def test_add_user_to_repository(self, client, repository_repo1, user_bob,
                                     user_bill):
         expected_admin = [{**repository_repo1, 'permissions': ['Admin']}]
@@ -349,6 +369,35 @@ class TestIndividual():
         client.create_repository(user=user_bill['uuid'], **repository_repo2)
 
         result = client.list_repositories_for_user(user_bob['uuid'])
+
+        assert_rowsets_equal(expected, result)
+
+    def test_repository_membership(self, client, repository_repo1, user_bob,
+                                   user_bill, group_somelab):
+
+        expected = [
+            {
+                'subjectType': 'User',
+                'uuid': user_bob['uuid'],
+                'name': user_bob['name'],
+                'permissions': ['Admin']
+            },
+            {
+                'subjectType': 'Group',
+                'uuid': group_somelab['uuid'],
+                'name': group_somelab['name'],
+                'permissions': ['Read']
+            }
+        ]
+
+        client.create_user(**user_bob)
+        client.create_user(**user_bill)
+        client.create_group(**group_somelab, user=user_bill['uuid'])
+        client.create_repository(user=user_bob['uuid'], **repository_repo1)
+        client.add_group_to_repository(repository_repo1['uuid'],
+                                       group_somelab['uuid'], ['Read'])
+
+        result = client.list_repository_subjects(repository_repo1['uuid'])
 
         assert_rowsets_equal(expected, result)
 

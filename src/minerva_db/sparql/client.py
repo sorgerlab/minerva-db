@@ -67,6 +67,34 @@ class Client():
 
         self.conn.update(statement)
 
+    def add_group_to_repository(self, repository: str, group: str,
+                                permissions: List[str]):
+        '''Add group to the specified repository.
+
+        Args:
+            repository: UUID of the repository.
+            group: UUID of the group.
+            permissions: Permissions to grant the group
+        '''
+
+        permissions = ' '.join([':{}'.format(permission)
+                                for permission in permissions])
+
+        statement = PREFIX + '''
+            INSERT {
+                ?group ?permission ?repository .
+            } WHERE {
+                BIND (d:%s AS ?repository)
+                BIND (d:%s AS ?group)
+                ?repository rdf:type :Repository .
+                ?group rdf:type :Group .
+                ?permission rdfs:subPropertyOf :Permission .
+                VALUES ?permission { %s }
+            }
+        ''' % (repository, group, permissions)
+
+        self.conn.update(statement)
+
     def add_users_to_group(self, group: str, users: List[str]):
         '''Add users to the specified group.
 
@@ -864,6 +892,50 @@ class Client():
         for row in rows:
             # Remove the prefix
             row['uuid'] = row['uuid'].split('#')[1]
+
+            # Split and remove prefix of permissions
+            row['permissions'] = [permission.split('#')[1]
+                                  for permission
+                                  in row['permissions'].split()]
+
+        return rows
+
+    def list_repository_subjects(self, uuid: str) -> List[Dict[str, str]]:
+        '''List subjects that have membership of this repository.
+
+        Args:
+            uuid: UUID of the repository.
+
+        Returns:
+            The list of subjects (with details) that have membership of this
+            repository along with the permissions that the subjects have.
+        '''
+
+        statement = PREFIX + '''
+            SELECT (?subject AS ?uuid)
+                   ?subjectType
+                   ?name
+                   (group_concat(DISTINCT ?permission) AS ?permissions)
+            WHERE {
+                BIND (d:%s AS ?repository)
+                ?subjectType rdfs:subClassOf :Subject .
+                ?subject rdf:type ?subjectType ;
+                         ?permission ?repository ;
+                         :name ?name .
+                ?permission rdfs:subPropertyOf :Permission .
+                ?repository rdf:type :Repository .
+                ?subject ?permission ?repository .
+            }
+            GROUP BY ?subject ?subjectType ?name
+            HAVING (bound(?subject))
+        ''' % uuid
+
+        header, rows = self.conn.query(statement)
+
+        for row in rows:
+            # Remove the prefixes
+            row['uuid'] = row['uuid'].split('#')[1]
+            row['subjectType'] = row['subjectType'].split('#')[1]
 
             # Split and remove prefix of permissions
             row['permissions'] = [permission.split('#')[1]
