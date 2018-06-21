@@ -9,13 +9,22 @@ with open(os.path.join(HERE, 'README.md')) as f:
     README = f.read()
 
 REQUIRES = [
-    'SPARQLWrapper>=1.8.1'
+    'marshmallow',
+    'marshmallow-sqlalchemy',
+    'mccabe',
+    # http://initd.org/psycopg/docs/install.html#binary-install-from-pypi
+    'psycopg2-binary',
+    'py',
+    'PyYAML',
+    'SQLAlchemy',
+    'stringcase'
 ]
 
 TEST_REQUIRES = [
     'pytest',
     'docker',
-    'requests'
+    'requests',
+    'factory_boy'
 ]
 
 
@@ -33,7 +42,7 @@ VERSION = read_version()
 DESCRIPTION = 'minerva DB'
 AUTHOR = 'D.P.W. Russell'
 EMAIL = 'douglas_russell@hms.harvard.edu'
-LICENSE = 'GPL-3.0'
+LICENSE = 'MIT'
 HOMEPAGE = 'https://github.com/sorgerlab/minerva-db'
 
 setup(
@@ -62,6 +71,6 @@ setup(
     license=LICENSE,
     url=HOMEPAGE,
     download_url='%s/archive/v%s.tar.gz' % (HOMEPAGE, VERSION),
-    keywords=['minerva', 'library', 'microscopy'],
-    zip_safe=False,
+    keywords=['minerva', 'database', 'library', 'microscopy'],
+    zip_safe=False
 )

@@ -9,7 +9,7 @@ python:
   - "3.6"
 
 before_install:
-- docker pull yyz1989/rdf4j
+- docker pull postgres
 
 install:
   - pip install flake8
