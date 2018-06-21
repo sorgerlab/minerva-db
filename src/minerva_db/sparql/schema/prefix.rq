@@ -1,5 +1,0 @@
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-PREFIX : <http://minerva.sorgerlab.hms.harvard.edu/test/0.1#>
-PREFIX d: <http://sorgerlab.hms.harvard.edu/test/0.1#>
-PREFIX cup: <https://cognito-idp.us-east-1.amazonaws.com/us-east-1_d9h9zgWpx#>
