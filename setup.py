@@ -9,7 +9,7 @@ with open(os.path.join(HERE, 'README.md')) as f:
     README = f.read()
 
 REQUIRES = [
-    'marshmallow',
+    'marshmallow==3.0.0b11',
     'marshmallow-sqlalchemy',
     'mccabe',
     # http://initd.org/psycopg/docs/install.html#binary-install-from-pypi
