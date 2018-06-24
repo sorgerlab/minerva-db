@@ -84,6 +84,14 @@ class TestImport():
         with pytest.raises(NoResultFound):
             client.get_import('nonexistant')
 
+    def test_list_imports_in_repository(self, client,
+                                        user_granted_read_hierarchy):
+        keys = ('uuid', 'name', 'complete')
+        d = sa_obj_to_dict(user_granted_read_hierarchy['import_'], keys)
+        assert [d] == client.list_imports_in_repository(
+            user_granted_read_hierarchy['repository_uuid']
+        )
+
 
 class TestBFU():
 

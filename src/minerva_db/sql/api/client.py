@@ -4,8 +4,9 @@ from typing import Dict, List, Optional, Union
 from ..models import (Subject, User, Group, Membership, Repository, Import,
                       BFU, Image, Key, Grant)
 from ..serializers import (user_schema, group_schema, repository_schema,
-                           repositories_schema, import_schema, bfu_schema,
-                           image_schema, grants_schema, membership_schema)
+                           repositories_schema, import_schema, imports_schema,
+                           bfu_schema, image_schema, grants_schema,
+                           membership_schema)
 from . import premade
 
 
@@ -506,7 +507,7 @@ class Client():
         Args:
             uuid: UUID of the user.
             implied: Include repositories implied through group membership.
-                Default: False
+                Default: False.
 
         Returns:
             The list of repositories the user is a member of along with the
@@ -526,3 +527,19 @@ class Client():
             'grants': grants_schema.dump(grants),
             'repositories': repositories_schema.dump(repositories)
         }
+
+    def list_imports_in_repository(self, uuid: str) -> List[SDict]:
+        '''List imports in given repository.
+
+        Args:
+            uuid: UUID of the repository.
+
+        Returns:
+            The list of imports in the repository.
+        '''
+
+        return imports_schema.dump(
+            self.session.query(Import)
+            .filter(Import.repository_uuid == uuid)
+            .all()
+        )
