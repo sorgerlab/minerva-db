@@ -5,8 +5,8 @@ from ..models import (Subject, User, Group, Membership, Repository, Import,
                       BFU, Image, Key, Grant)
 from ..serializers import (user_schema, group_schema, repository_schema,
                            repositories_schema, import_schema, imports_schema,
-                           bfu_schema, image_schema, grants_schema,
-                           membership_schema)
+                           keys_schema, bfu_schema, bfus_schema, image_schema,
+                           images_schema, grants_schema, membership_schema)
 from . import premade
 
 
@@ -541,5 +541,69 @@ class Client():
         return imports_schema.dump(
             self.session.query(Import)
             .filter(Import.repository_uuid == uuid)
+            .all()
+        )
+
+    def list_bfus_in_import(self, uuid: str) -> List[SDict]:
+        '''List BFUs in given import.
+
+        Args:
+            uuid: UUID of the import.
+
+        Returns:
+            The list of BFUs in the import.
+        '''
+
+        return bfus_schema.dump(
+            self.session.query(BFU)
+            .filter(BFU.import_uuid == uuid)
+            .all()
+        )
+
+    def list_keys_in_import(self, uuid: str) -> List[SDict]:
+        '''List keys in given import.
+
+        Args:
+            uuid: UUID of the import.
+
+        Returns:
+            The list of keys in the import.
+        '''
+
+        return keys_schema.dump(
+            self.session.query(Key)
+            .filter(Key.import_uuid == uuid)
+            .all()
+        )
+
+    def list_images_in_bfu(self, uuid: str) -> List[SDict]:
+        '''List images in given BFU.
+
+        Args:
+            uuid: UUID of the BFU.
+
+        Returns:
+            The list of images in the BFU.
+        '''
+
+        return images_schema.dump(
+            self.session.query(Image)
+            .filter(Image.bfu_uuid == uuid)
+            .all()
+        )
+
+    def list_keys_in_bfu(self, uuid: str) -> List[SDict]:
+        '''List keys in given BFU.
+
+        Args:
+            uuid: UUID of the BFU.
+
+        Returns:
+            The list of keys in the BFU.
+        '''
+
+        return keys_schema.dump(
+            self.session.query(Key)
+            .filter(Key.bfu_uuid == uuid)
             .all()
         )

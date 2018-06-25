@@ -6,7 +6,7 @@ from minerva_db.sql.models import Base
 from .factories import (GroupFactory, UserFactory, MembershipFactory,
                         MembershipOwnerFactory, RepositoryFactory,
                         GrantFactory, GrantAdminFactory, ImportFactory,
-                        BFUFactory, ImageFactory, KeyFactory)
+                        BFUFactory, ImageFactory, KeyFactory, KeyBFUFactory)
 
 
 @pytest.fixture(scope='session')
@@ -261,8 +261,9 @@ def user_granted_read_hierarchy(session):
     import_ = ImportFactory(repository=repository)
     bfu = BFUFactory(import_=import_)
     image = ImageFactory(bfu=bfu)
+    key = KeyBFUFactory(import_=import_, bfu=bfu)
 
-    session.add_all([user, repository, grant, import_, bfu, image])
+    session.add_all([user, repository, grant, import_, bfu, key, image])
     session.commit()
     return {
         'user': user,
@@ -274,6 +275,7 @@ def user_granted_read_hierarchy(session):
         'import_uuid': import_.uuid,
         'bfu': bfu,
         'bfu_uuid': bfu.uuid,
+        'key': key,
         'image': image,
         'image_uuid': image.uuid
     }
@@ -289,10 +291,12 @@ def group_granted_read_hierarchy(session):
     grant = GrantFactory(subject=group, repository=repository)
     import_ = ImportFactory(repository=repository)
     bfu = BFUFactory(import_=import_)
+    key = KeyBFUFactory(import_=import_, bfu=bfu)
     image = ImageFactory(bfu=bfu)
 
+
     session.add_all([user, group, membership, repository, grant, import_, bfu,
-                     image])
+                     key, image])
     session.commit()
     return {
         'user': user,
@@ -304,6 +308,7 @@ def group_granted_read_hierarchy(session):
         'import_uuid': import_.uuid,
         'bfu': bfu,
         'bfu_uuid': bfu.uuid,
+        'key': key,
         'image': image,
         'image_uuid': image.uuid
     }

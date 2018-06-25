@@ -92,6 +92,15 @@ class TestImport():
             user_granted_read_hierarchy['repository_uuid']
         )
 
+    # TODO Test class for Key?
+    def test_list_keys_in_import(self, client,
+                                 user_granted_read_hierarchy):
+        keys = ('key',)
+        d = sa_obj_to_dict(user_granted_read_hierarchy['key'], keys)
+        assert [d] == client.list_keys_in_import(
+            user_granted_read_hierarchy['import_uuid']
+        )
+
 
 class TestBFU():
 
@@ -149,6 +158,22 @@ class TestBFU():
         with pytest.raises(NoResultFound):
             client.get_bfu('nonexistant')
 
+    def test_list_bfus_in_import(self, client,
+                                 user_granted_read_hierarchy):
+        keys = ('uuid', 'name', 'reader', 'complete')
+        d = sa_obj_to_dict(user_granted_read_hierarchy['bfu'], keys)
+        assert [d] == client.list_bfus_in_import(
+            user_granted_read_hierarchy['import_uuid']
+        )
+
+    # TODO Test class for Key?
+    def test_list_keys_in_bfu(self, client,
+                              user_granted_read_hierarchy):
+        keys = ('key',)
+        d = sa_obj_to_dict(user_granted_read_hierarchy['key'], keys)
+        assert [d] == client.list_keys_in_bfu(
+            user_granted_read_hierarchy['bfu_uuid']
+        )
 
 class TestImage():
 
@@ -186,3 +211,11 @@ class TestImage():
     def test_get_image_nonexistant(self, client):
         with pytest.raises(NoResultFound):
             client.get_image('nonexistant')
+
+    def test_list_images_in_bfu(self, client,
+                                user_granted_read_hierarchy):
+        keys = ('uuid', 'name', 'key', 'pyramid_levels')
+        d = sa_obj_to_dict(user_granted_read_hierarchy['image'], keys)
+        assert [d] == client.list_images_in_bfu(
+            user_granted_read_hierarchy['bfu_uuid']
+        )
