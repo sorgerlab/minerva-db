@@ -78,7 +78,7 @@ class TestImport():
     def test_get_import(self, client, db_import):
         keys = ('uuid', 'name', 'complete')
         d = sa_obj_to_dict(db_import, keys)
-        assert client.get_import(db_import.uuid) == d
+        assert d == client.get_import(db_import.uuid)
 
     def test_get_import_nonexistant(self, client):
         with pytest.raises(NoResultFound):
@@ -100,6 +100,12 @@ class TestImport():
         assert [d] == client.list_keys_in_import(
             user_granted_read_hierarchy['import_uuid']
         )
+
+    def test_set_import_complete(self, client, db_import):
+        keys = ('uuid', 'name', 'complete')
+        d = sa_obj_to_dict(db_import, keys)
+        d['complete'] = True
+        assert d == client.set_import_complete(db_import.uuid)
 
 
 class TestBFU():

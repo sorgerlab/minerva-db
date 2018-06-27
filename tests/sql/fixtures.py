@@ -294,7 +294,6 @@ def group_granted_read_hierarchy(session):
     key = KeyBFUFactory(import_=import_, bfu=bfu)
     image = ImageFactory(bfu=bfu)
 
-
     session.add_all([user, group, membership, repository, grant, import_, bfu,
                      key, image])
     session.commit()
