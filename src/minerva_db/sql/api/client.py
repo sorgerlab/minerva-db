@@ -607,3 +607,26 @@ class Client():
             .filter(Key.bfu_uuid == uuid)
             .all()
         )
+
+    def set_import_complete(self, uuid: str) -> SDict:
+        '''Set the given import as complete.
+
+        Args:
+            uuid: UUID of the Import.
+
+        Returns:
+            The updated import.
+        '''
+
+        import_ = (
+            self.session.query(Import)
+            .filter(Import.uuid == uuid)
+            .one()
+        )
+
+        import_.complete = True
+
+        self.session.add(import_)
+        self.session.commit()
+
+        return import_schema.dump(import_)
