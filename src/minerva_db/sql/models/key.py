@@ -7,7 +7,8 @@ from .import_ import Import
 
 class Key(Base):
     key = Column(String(1024), primary_key=True, nullable=False)
-    import_uuid = Column(String(36), ForeignKey(Import.uuid), nullable=False)
+    import_uuid = Column(String(36), ForeignKey(Import.uuid), primary_key=True,
+                         nullable=False)
     bfu_uuid = Column(String(36), ForeignKey(BFU.uuid))
 
     import_ = relationship('Import', back_populates='keys')
