@@ -181,6 +181,7 @@ class TestBFU():
             user_granted_read_hierarchy['bfu_uuid']
         )
 
+
 class TestImage():
 
     def test_create_image(self, client, session, db_bfu):
