@@ -15,7 +15,6 @@ REQUIRES = [
     # http://initd.org/psycopg/docs/install.html#binary-install-from-pypi
     'psycopg2-binary',
     'py',
-    'PyYAML',
     'SQLAlchemy',
     'stringcase'
 ]
