@@ -6,7 +6,7 @@ from .import_ import Import
 
 class BFU(Base):
     uuid = Column(String(36), primary_key=True)
-    name = Column(String(256), unique=True, nullable=False)
+    name = Column(String(256), nullable=False)
     reader = Column(String(256), nullable=False)
     complete = Column(Boolean, nullable=False)
     import_uuid = Column(String(36), ForeignKey(Import.uuid), nullable=False)
