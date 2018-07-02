@@ -125,7 +125,7 @@ class TestBFU():
         assert db_import_with_keys == bfu.import_
         assert set(db_keys) == {key.key for key in bfu.keys}
 
-    @pytest.mark.parametrize('duplicate_key', ['uuid', 'name'])
+    @pytest.mark.parametrize('duplicate_key', ['uuid'])
     def test_create_bfu_duplicate(self, client, db_import,
                                   duplicate_key):
         keys = ('uuid', 'name', 'reader')
