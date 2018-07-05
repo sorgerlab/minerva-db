@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String
+from sqlalchemy import Column, String, Enum
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship
 from .base import Base
@@ -7,11 +7,17 @@ from .base import Base
 class Repository(Base):
     uuid = Column(String(36), primary_key=True)
     name = Column(String(256), unique=True, nullable=False)
+    raw_storage_type = set(['Archive', 'Live', 'Destroy'])
+    raw_storage = Column(
+        Enum(*raw_storage_type, name='rawstoragetypes'),
+        nullable=False
+    )
 
     # association proxy of 'memberships' collection to 'group' attribute
     subjects = association_proxy('grants', 'subject')
     imports = relationship('Import', back_populates='repository')
 
-    def __init__(self, uuid, name):
+    def __init__(self, uuid, name, raw_storage='Archive'):
         self.uuid = uuid
         self.name = name
+        self.raw_storage = raw_storage

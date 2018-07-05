@@ -11,7 +11,7 @@ from .utils import sa_obj_to_dict
 class TestRepository():
 
     def test_create_repository(self, client, session, db_user):
-        keys = ('uuid', 'name')
+        keys = ('uuid', 'name', 'raw_storage')
         d = sa_obj_to_dict(RepositoryFactory(), keys)
         assert d == client.create_repository(user_uuid=db_user.uuid, **d)
         repository = session.query(Repository).one()
@@ -20,7 +20,7 @@ class TestRepository():
 
     @pytest.mark.parametrize('duplicate_key', ['uuid', 'name'])
     def test_create_repository_duplicate(self, client, db_user, duplicate_key):
-        keys = ('uuid', 'name')
+        keys = ('uuid', 'name', 'raw_storage')
         d1 = sa_obj_to_dict(RepositoryFactory(), keys)
         d2 = sa_obj_to_dict(RepositoryFactory(), keys)
         d2[duplicate_key] = d1[duplicate_key]
@@ -29,13 +29,13 @@ class TestRepository():
             client.create_repository(user_uuid=db_user.uuid, **d2)
 
     def test_create_repository_nonexistant_user(self, client, session):
-        keys = ('uuid', 'name')
+        keys = ('uuid', 'name', 'raw_storage')
         d = sa_obj_to_dict(RepositoryFactory(), keys)
         with pytest.raises(NoResultFound):
             client.create_repository(user_uuid='nonexistant', **d)
 
     def test_get_repository(self, client, db_repository):
-        keys = ('uuid', 'name')
+        keys = ('uuid', 'name', 'raw_storage')
         d = sa_obj_to_dict(db_repository, keys)
         assert client.get_repository(db_repository.uuid) == d
 
@@ -181,11 +181,27 @@ class TestBFU():
             user_granted_read_hierarchy['bfu_uuid']
         )
 
+    def test_set_bfu_complete(self, client, db_bfu):
+        keys = ('uuid', 'name', 'reader', 'complete')
+        d = sa_obj_to_dict(db_bfu, keys)
+        d['complete'] = True
+        assert d == client.set_bfu_complete(db_bfu.uuid, images=[])
+
+    def test_set_bfu_complete_with_images(self, client, db_bfu):
+        keys = ('uuid', 'name', 'reader', 'complete')
+        d = sa_obj_to_dict(db_bfu, keys)
+        d_image = sa_obj_to_dict(ImageFactory(), ['uuid', 'name',
+                                                  'pyramid_levels'])
+        d['complete'] = True
+        assert d == client.set_bfu_complete(db_bfu.uuid, images=[d_image])
+        image = client.list_images_in_bfu(db_bfu.uuid)
+        assert [d_image] == image
+
 
 class TestImage():
 
     def test_create_image(self, client, session, db_bfu):
-        keys = ('uuid', 'name', 'key', 'pyramid_levels')
+        keys = ('uuid', 'name', 'pyramid_levels')
         image = ImageFactory()
         d = sa_obj_to_dict(image, keys)
         assert d == client.create_image(bfu_uuid=db_bfu.uuid,
@@ -196,7 +212,7 @@ class TestImage():
 
     @pytest.mark.parametrize('duplicate_key', ['uuid'])
     def test_create_image_duplicate(self, client, db_bfu, duplicate_key):
-        keys = ('uuid', 'name', 'key', 'pyramid_levels')
+        keys = ('uuid', 'name', 'pyramid_levels')
         d1 = sa_obj_to_dict(ImageFactory(), keys)
         d2 = sa_obj_to_dict(ImageFactory(), keys)
         d2[duplicate_key] = d1[duplicate_key]
@@ -205,13 +221,13 @@ class TestImage():
             client.create_image(bfu_uuid=db_bfu.uuid, **d2)
 
     def test_create_image_nonexistant_repository(self, client, session):
-        keys = ('uuid', 'name', 'key', 'pyramid_levels')
+        keys = ('uuid', 'name', 'pyramid_levels')
         d = sa_obj_to_dict(ImageFactory(), keys)
         with pytest.raises(NoResultFound):
             client.create_image(bfu_uuid='nonexistant', **d)
 
     def test_get_image(self, client, db_image):
-        keys = ('uuid', 'name', 'key', 'pyramid_levels')
+        keys = ('uuid', 'name', 'pyramid_levels')
         d = sa_obj_to_dict(db_image, keys)
         assert client.get_image(db_image.uuid) == d
 
@@ -221,7 +237,7 @@ class TestImage():
 
     def test_list_images_in_bfu(self, client,
                                 user_granted_read_hierarchy):
-        keys = ('uuid', 'name', 'key', 'pyramid_levels')
+        keys = ('uuid', 'name', 'pyramid_levels')
         d = sa_obj_to_dict(user_granted_read_hierarchy['image'], keys)
         assert [d] == client.list_images_in_bfu(
             user_granted_read_hierarchy['bfu_uuid']

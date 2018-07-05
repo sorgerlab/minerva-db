@@ -98,21 +98,22 @@ class Client():
         return membership_schema.dump(membership)
 
     # Resources
-    def create_repository(self, uuid: str, name: str,
-                          user_uuid: str) -> SDict:
+    def create_repository(self, uuid: str, name: str, user_uuid: str,
+                          raw_storage: str = 'Archive') -> SDict:
         '''Create a repository with the specified user as an admin.
 
         Args:
             uuid: UUID of the repository.
             name: Name of the repository.
             user_uuid: UUID of the user to be initial admin.
+            raw_storage: Storage level of the raw data. Default: 'Archive'.
 
         Returns:
             The newly created repository.
         '''
 
         user = self.session.query(User).filter(User.uuid == user_uuid).one()
-        repository = Repository(uuid, name)
+        repository = Repository(uuid, name, raw_storage)
         grant = Grant(user, repository, permission='Admin')
         self.session.add_all((repository, grant))
         self.session.commit()
@@ -175,14 +176,13 @@ class Client():
         self.session.commit()
         return bfu_schema.dump(bfu)
 
-    def create_image(self, uuid: str, name: str, key: str, pyramid_levels: int,
+    def create_image(self, uuid: str, name: str, pyramid_levels: int,
                      bfu_uuid: str) -> SDict:
         '''Create image within the specified BFU.
 
         Args:
             uuid : UUID of the image.
             name: Name of the import.
-            key: Prefix key of the image.
             pyramid_levels: Number of pyramid levels.
             bfu_uuid: UUID of the BFU.
 
@@ -194,7 +194,7 @@ class Client():
             .filter(BFU.uuid == bfu_uuid) \
             .one()
 
-        image = Image(uuid, name, key, pyramid_levels, bfu)
+        image = Image(uuid, name, pyramid_levels, bfu)
         self.session.add(image)
         self.session.commit()
         return image_schema.dump(image)
@@ -628,5 +628,27 @@ class Client():
 
         self.session.add(import_)
         self.session.commit()
-
         return import_schema.dump(import_)
+
+    def set_bfu_complete(self, uuid: str, images: List[SDict]) -> SDict:
+        '''Set the given BFU as complete and register the detected images.
+
+        Args:
+            uuid : UUID of the BFU.
+            images: Images to register in the BFU.
+
+        Returns:
+            The updated BFU.
+        '''
+
+        bfu = self.session.query(BFU) \
+            .filter(BFU.uuid == uuid) \
+            .one()
+
+        images = [Image(**image, bfu=bfu) for image in images]
+        bfu.complete = True
+
+        self.session.add(bfu)
+        self.session.add_all(images)
+        self.session.commit()
+        return bfu_schema.dump(bfu)

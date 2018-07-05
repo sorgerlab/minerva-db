@@ -104,6 +104,5 @@ class ImageFactory(Factory):
 
     uuid = LazyAttribute(lambda o: o.name.lower().replace(' ', '_'))
     name = Sequence(lambda n: f'image{n}')
-    key = LazyAttribute(lambda o: o.name.lower().replace(' ', '_'))
     pyramid_levels = 1
     bfu = SubFactory(BFUFactory)

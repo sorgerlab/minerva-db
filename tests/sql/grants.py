@@ -105,7 +105,7 @@ class TestLists():
     def test_list_repositories_for_user(self, client,
                                         user_granted_read_hierarchy):
         grant_keys = ['subject_uuid', 'repository_uuid', 'permission']
-        repository_keys = ['uuid', 'name']
+        repository_keys = ['uuid', 'name', 'raw_storage']
         user_uuid = user_granted_read_hierarchy['user_uuid']
         d_grant = sa_obj_to_dict(
             user_granted_read_hierarchy['grant'],
@@ -126,7 +126,7 @@ class TestLists():
                                                 request):
         hierarchy = request.getfuncargvalue(fixture_name)
         grant_keys = ['subject_uuid', 'repository_uuid', 'permission']
-        repository_keys = ['uuid', 'name']
+        repository_keys = ['uuid', 'name', 'raw_storage']
         user_uuid = hierarchy['user_uuid']
         d_grant = sa_obj_to_dict(
             hierarchy['grant'],
