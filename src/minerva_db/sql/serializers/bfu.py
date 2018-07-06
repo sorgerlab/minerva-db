@@ -5,6 +5,7 @@ from ..models import BFU
 class BFUSchema(ModelSchema):
     class Meta:
         model = BFU
+        include_fk = True
         exclude = tuple(prop.key
                         for prop in BFU.__mapper__.iterate_properties
                         if hasattr(prop, 'direction') or prop.key == 'satype')
