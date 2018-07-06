@@ -50,11 +50,13 @@ class TestImport():
         keys = ('uuid', 'name')
         import_ = ImportFactory()
         create_d = sa_obj_to_dict(import_, keys)
-        keys = keys + ('complete',)
+        keys += ('complete',)
         d = sa_obj_to_dict(import_, keys)
+        d['repository_uuid'] = db_repository.uuid
         assert d == client.create_import(repository_uuid=db_repository.uuid,
                                          **create_d)
         import_ = session.query(Import).one()
+        keys += ('repository_uuid',)
         assert d == sa_obj_to_dict(import_, keys)
         assert db_repository == import_.repository
 
@@ -76,7 +78,7 @@ class TestImport():
             client.create_import(repository_uuid='nonexistant', **d)
 
     def test_get_import(self, client, db_import):
-        keys = ('uuid', 'name', 'complete')
+        keys = ('uuid', 'name', 'complete', 'repository_uuid')
         d = sa_obj_to_dict(db_import, keys)
         assert d == client.get_import(db_import.uuid)
 
@@ -86,7 +88,7 @@ class TestImport():
 
     def test_list_imports_in_repository(self, client,
                                         user_granted_read_hierarchy):
-        keys = ('uuid', 'name', 'complete')
+        keys = ('uuid', 'name', 'complete', 'repository_uuid')
         d = sa_obj_to_dict(user_granted_read_hierarchy['import_'], keys)
         assert [d] == client.list_imports_in_repository(
             user_granted_read_hierarchy['repository_uuid']
@@ -95,14 +97,14 @@ class TestImport():
     # TODO Test class for Key?
     def test_list_keys_in_import(self, client,
                                  user_granted_read_hierarchy):
-        keys = ('key',)
+        keys = ('key', 'import_uuid', 'bfu_uuid')
         d = sa_obj_to_dict(user_granted_read_hierarchy['key'], keys)
         assert [d] == client.list_keys_in_import(
             user_granted_read_hierarchy['import_uuid']
         )
 
     def test_set_import_complete(self, client, db_import):
-        keys = ('uuid', 'name', 'complete')
+        keys = ('uuid', 'name', 'complete', 'repository_uuid')
         d = sa_obj_to_dict(db_import, keys)
         d['complete'] = True
         assert d == client.set_import_complete(db_import.uuid)
@@ -115,12 +117,14 @@ class TestBFU():
         keys = ('uuid', 'name', 'reader')
         bfu = BFUFactory()
         create_d = sa_obj_to_dict(bfu, keys)
-        keys = keys + ('complete',)
+        keys += ('complete',)
         d = sa_obj_to_dict(bfu, keys)
+        d['import_uuid'] = db_import_with_keys.uuid
         assert d == client.create_bfu(import_uuid=db_import_with_keys.uuid,
                                       keys=db_keys,
                                       **create_d)
         bfu = session.query(BFU).one()
+        keys += ('import_uuid',)
         assert d == sa_obj_to_dict(bfu, keys)
         assert db_import_with_keys == bfu.import_
         assert set(db_keys) == {key.key for key in bfu.keys}
@@ -156,7 +160,7 @@ class TestBFU():
             client.create_bfu(import_uuid='nonexistant', keys=[], **d)
 
     def test_get_bfu(self, client, db_bfu):
-        keys = ('uuid', 'name', 'reader', 'complete')
+        keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
         d = sa_obj_to_dict(db_bfu, keys)
         assert client.get_bfu(db_bfu.uuid) == d
 
@@ -166,7 +170,7 @@ class TestBFU():
 
     def test_list_bfus_in_import(self, client,
                                  user_granted_read_hierarchy):
-        keys = ('uuid', 'name', 'reader', 'complete')
+        keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
         d = sa_obj_to_dict(user_granted_read_hierarchy['bfu'], keys)
         assert [d] == client.list_bfus_in_import(
             user_granted_read_hierarchy['import_uuid']
@@ -175,26 +179,27 @@ class TestBFU():
     # TODO Test class for Key?
     def test_list_keys_in_bfu(self, client,
                               user_granted_read_hierarchy):
-        keys = ('key',)
+        keys = ('key', 'import_uuid', 'bfu_uuid')
         d = sa_obj_to_dict(user_granted_read_hierarchy['key'], keys)
         assert [d] == client.list_keys_in_bfu(
             user_granted_read_hierarchy['bfu_uuid']
         )
 
     def test_set_bfu_complete(self, client, db_bfu):
-        keys = ('uuid', 'name', 'reader', 'complete')
+        keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
         d = sa_obj_to_dict(db_bfu, keys)
         d['complete'] = True
         assert d == client.set_bfu_complete(db_bfu.uuid, images=[])
 
     def test_set_bfu_complete_with_images(self, client, db_bfu):
-        keys = ('uuid', 'name', 'reader', 'complete')
+        keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
         d = sa_obj_to_dict(db_bfu, keys)
         d_image = sa_obj_to_dict(ImageFactory(), ['uuid', 'name',
                                                   'pyramid_levels'])
         d['complete'] = True
         assert d == client.set_bfu_complete(db_bfu.uuid, images=[d_image])
         image = client.list_images_in_bfu(db_bfu.uuid)
+        d_image['bfu_uuid'] = db_bfu.uuid
         assert [d_image] == image
 
 
@@ -203,10 +208,13 @@ class TestImage():
     def test_create_image(self, client, session, db_bfu):
         keys = ('uuid', 'name', 'pyramid_levels')
         image = ImageFactory()
+        create_d = sa_obj_to_dict(image, keys)
         d = sa_obj_to_dict(image, keys)
+        d['bfu_uuid'] = db_bfu.uuid
         assert d == client.create_image(bfu_uuid=db_bfu.uuid,
-                                        **d)
+                                        **create_d)
         image = session.query(Image).one()
+        keys += ('bfu_uuid',)
         assert d == sa_obj_to_dict(image, keys)
         assert db_bfu == image.bfu
 
@@ -227,7 +235,7 @@ class TestImage():
             client.create_image(bfu_uuid='nonexistant', **d)
 
     def test_get_image(self, client, db_image):
-        keys = ('uuid', 'name', 'pyramid_levels')
+        keys = ('uuid', 'name', 'pyramid_levels', 'bfu_uuid')
         d = sa_obj_to_dict(db_image, keys)
         assert client.get_image(db_image.uuid) == d
 
@@ -237,7 +245,7 @@ class TestImage():
 
     def test_list_images_in_bfu(self, client,
                                 user_granted_read_hierarchy):
-        keys = ('uuid', 'name', 'pyramid_levels')
+        keys = ('uuid', 'name', 'pyramid_levels', 'bfu_uuid')
         d = sa_obj_to_dict(user_granted_read_hierarchy['image'], keys)
         assert [d] == client.list_images_in_bfu(
             user_granted_read_hierarchy['bfu_uuid']

@@ -5,6 +5,7 @@ from ..models import Image
 class ImageSchema(ModelSchema):
     class Meta:
         model = Image
+        include_fk = True
         exclude = tuple(prop.key
                         for prop in Image.__mapper__.iterate_properties
                         if hasattr(prop, 'direction') or prop.key == 'satype')

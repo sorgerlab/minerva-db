@@ -5,6 +5,7 @@ from ..models import Key
 class KeySchema(ModelSchema):
     class Meta:
         model = Key
+        include_fk = True
         exclude = tuple(prop.key
                         for prop in Key.__mapper__.iterate_properties
                         if hasattr(prop, 'direction') or prop.key == 'satype')
