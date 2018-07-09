@@ -165,6 +165,7 @@ class Client():
             .one()
         bfu = BFU(uuid, name, reader, import_)
         s3_keys = self.session.query(Key) \
+            .filter(Key.import_uuid == import_uuid) \
             .filter(Key.key.in_(keys)) \
             .all()
         for key in s3_keys:
