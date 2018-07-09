@@ -99,14 +99,15 @@ class Client():
 
     # Resources
     def create_repository(self, uuid: str, name: str, user_uuid: str,
-                          raw_storage: str = 'Archive') -> SDict:
+                          raw_storage: Optional[str] = None) -> SDict:
         '''Create a repository with the specified user as an admin.
 
         Args:
             uuid: UUID of the repository.
             name: Name of the repository.
             user_uuid: UUID of the user to be initial admin.
-            raw_storage: Storage level of the raw data. Default: 'Archive'.
+            raw_storage: Storage level of the raw data. Default: `None`
+                indicates 'Archive'.
 
         Returns:
             The newly created repository.
