@@ -17,7 +17,7 @@ class Repository(Base):
     subjects = association_proxy('grants', 'subject')
     imports = relationship('Import', back_populates='repository')
 
-    def __init__(self, uuid, name, raw_storage='Archive'):
+    def __init__(self, uuid, name, raw_storage=None):
         self.uuid = uuid
         self.name = name
-        self.raw_storage = raw_storage
+        self.raw_storage = 'Archive' if raw_storage is None else raw_storage
