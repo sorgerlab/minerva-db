@@ -4,7 +4,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from minerva_db.sql.api import DBError
 from minerva_db.sql.models import Repository, Import, BFU, Image
 from .factories import (RepositoryFactory, ImportFactory, BFUFactory,
-                        ImageFactory)
+                        ImageFactory, KeyFactory)
 from .utils import sa_obj_to_dict
 
 
@@ -158,6 +158,23 @@ class TestBFU():
         d = sa_obj_to_dict(BFUFactory(), keys)
         with pytest.raises(NoResultFound):
             client.create_bfu(import_uuid='nonexistant', keys=[], **d)
+
+    def test_create_bfu_with_duplicate_key_in_different_imports(self, client,
+                                                                session):
+        keys = ('uuid', 'name', 'reader')
+        import1 = ImportFactory()
+        import2 = ImportFactory()
+        key1 = KeyFactory(import_=import1, key='key')
+        key2 = KeyFactory(import_=import2, key='key')
+        session.add_all([import1, import2, key1, key2])
+        session.commit()
+
+        bfu1 = BFUFactory()
+        bfu2 = BFUFactory()
+        d1 = sa_obj_to_dict(bfu1, keys)
+        d2 = sa_obj_to_dict(bfu2, keys)
+        client.create_bfu(import_uuid=import1.uuid, keys=['key'], **d1)
+        client.create_bfu(import_uuid=import2.uuid, keys=['key'], **d2)
 
     def test_get_bfu(self, client, db_bfu):
         keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
