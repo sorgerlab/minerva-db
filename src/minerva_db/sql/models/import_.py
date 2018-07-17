@@ -12,8 +12,10 @@ class Import(Base):
                              nullable=False)
 
     repository = relationship('Repository', back_populates='imports')
-    bfus = relationship('BFU', back_populates='import_')
-    keys = relationship('Key', back_populates='import_')
+    bfus = relationship('BFU', back_populates='import_',
+                        cascade='all, delete-orphan')
+    keys = relationship('Key', back_populates='import_',
+                        cascade='all, delete-orphan')
 
     def __init__(self, uuid, name, repository, complete=False):
         self.uuid = uuid

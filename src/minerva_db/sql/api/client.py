@@ -654,3 +654,59 @@ class Client():
         self.session.add_all(images)
         self.session.commit()
         return bfu_schema.dump(bfu)
+
+    def update_repository(self, uuid: str, name: str = None,
+                          raw_storage: Optional[str] = None) -> SDict:
+        '''Update a repository.
+
+        Args:
+            uuid: UUID of the repository.
+            name: Updated name of the repository. Default: `None` for no
+                update.
+            raw_storage: Updated storage level of the raw data. Default: `None`
+                for no update.
+
+        Returns:
+            The updated repository.
+        '''
+
+        repository = (
+            self.session.query(Repository)
+            .filter(Repository.uuid == uuid)
+            .one()
+        )
+
+        if name is not None:
+            repository.name = name
+
+        if raw_storage is not None:
+            repository.raw_storage = raw_storage
+
+        # TODO Handle storage level retrospectively in the calling method
+        # Live -> Archive (Tag all objects as project:archive to lifecycle)
+        # Live/Archive -> Destroy (Remove all objects)
+        # Archive -> Live (Restore data from Glacier then copy the object to
+        #   the same key without project:archive tag to change storage level
+        #   permanently)
+        # Destroy -> Live/Archive (Data will be missing)
+        # Potentially use lifecycle to delete also to protect from mistakes?
+        self.session.add(repository)
+        self.session.commit()
+        return repository_schema.dump(repository)
+
+    def delete_repository(self, uuid: str):
+        '''Delete a repository and all contents.
+
+        Args:
+            uuid: UUID of the repository.
+        '''
+
+        repository = (
+            self.session.query(Repository)
+            .filter(Repository.uuid == uuid)
+            .one()
+        )
+
+        # TODO Handle delete of raw/tiled objects in the calling method
+        # Recovery from delete?
+        self.session.delete(repository)
