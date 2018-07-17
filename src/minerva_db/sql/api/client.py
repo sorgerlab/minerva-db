@@ -710,3 +710,4 @@ class Client():
         # TODO Handle delete of raw/tiled objects in the calling method
         # Recovery from delete?
         self.session.delete(repository)
+        self.session.commit()
