@@ -15,7 +15,8 @@ class Repository(Base):
 
     # association proxy of 'memberships' collection to 'group' attribute
     subjects = association_proxy('grants', 'subject')
-    imports = relationship('Import', back_populates='repository')
+    imports = relationship('Import', back_populates='repository',
+                           cascade='all, delete-orphan')
 
     def __init__(self, uuid, name, raw_storage=None):
         self.uuid = uuid

@@ -14,4 +14,5 @@ class Subject(Base):
 
     repositories = relationship('Repository', viewonly=True,
                                 secondary='t_grant')
-    grants = relationship('Grant', back_populates='subject')
+    grants = relationship('Grant', back_populates='subject',
+                          cascade='all, delete-orphan')

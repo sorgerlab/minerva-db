@@ -13,7 +13,8 @@ class BFU(Base):
 
     import_ = relationship('Import', back_populates='bfus')
     keys = relationship('Key', back_populates='bfu')
-    images = relationship('Image', back_populates='bfu')
+    images = relationship('Image', back_populates='bfu',
+                          cascade='all, delete-orphan')
 
     def __init__(self, uuid, name, reader, import_, complete=False):
         self.uuid = uuid

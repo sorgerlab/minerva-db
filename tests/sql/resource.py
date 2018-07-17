@@ -1,8 +1,9 @@
 import pytest
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.orm.exc import NoResultFound
 from minerva_db.sql.api import DBError
-from minerva_db.sql.models import Repository, Import, BFU, Image
+from minerva_db.sql.models import (Repository, Import, BFU, Image, Key, User,
+                                   Grant)
 from .factories import (RepositoryFactory, ImportFactory, BFUFactory,
                         ImageFactory, KeyFactory)
 from .utils import sa_obj_to_dict
@@ -34,6 +35,14 @@ class TestRepository():
         with pytest.raises(NoResultFound):
             client.create_repository(user_uuid='nonexistant', **d)
 
+    def test_create_repository_nonexistant_raw_storage(self, client, db_user,
+                                                       session):
+        keys = ('uuid', 'name', 'raw_storage')
+        d = sa_obj_to_dict(RepositoryFactory(), keys)
+        d['raw_storage'] = 'nonexistant'
+        with pytest.raises(DataError):
+            client.create_repository(user_uuid=db_user.uuid, **d)
+
     def test_get_repository(self, client, db_repository):
         keys = ('uuid', 'name', 'raw_storage')
         d = sa_obj_to_dict(db_repository, keys)
@@ -42,6 +51,38 @@ class TestRepository():
     def test_get_repository_nonexistant(self, client):
         with pytest.raises(NoResultFound):
             client.get_repository('nonexistant')
+
+    def test_update_repository_name(self, client, db_repository):
+        keys = ('uuid', 'name', 'raw_storage')
+        d = sa_obj_to_dict(db_repository, keys)
+        repository = client.update_repository(db_repository.uuid,
+                                              name='renamed')
+        d['name'] = 'renamed'
+        assert d == repository
+
+    def test_update_repository_raw_storage(self, client, db_repository):
+        keys = ('uuid', 'name', 'raw_storage')
+        d = sa_obj_to_dict(db_repository, keys)
+        repository = client.update_repository(db_repository.uuid,
+                                              raw_storage='Destroy')
+        d['raw_storage'] = 'Destroy'
+        assert d == repository
+
+    def test_delete_repository(self, client, session, db_repository):
+        client.delete_repository(db_repository.uuid)
+        assert 0 == session.query(Repository).count()
+
+    def test_delete_repository_with_contents(self, client, session,
+                                             user_granted_read_hierarchy):
+        db_repository = user_granted_read_hierarchy['repository']
+        client.delete_repository(db_repository.uuid)
+        assert 0 == session.query(Repository).count()
+        assert 0 == session.query(Import).count()
+        assert 0 == session.query(BFU).count()
+        assert 0 == session.query(Image).count()
+        assert 0 == session.query(Key).count()
+        assert 0 == session.query(Grant).count()
+        assert 1 == session.query(User).count()
 
 
 class TestImport():
