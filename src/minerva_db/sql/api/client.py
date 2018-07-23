@@ -610,11 +610,16 @@ class Client():
             .all()
         )
 
-    def set_import_complete(self, uuid: str) -> SDict:
-        '''Set the given import as complete.
+    def update_import(self, uuid: str, name: Optional[str] = None,
+                      complete: Optional[bool] = None) -> SDict:
+        '''Update a import.
 
         Args:
-            uuid: UUID of the Import.
+            uuid: UUID of the import.
+            name: Updated name of the import. Default: `None` for no
+                update.
+            complete: Updated completedness of the import. Default: `None`
+                for no update.
 
         Returns:
             The updated import.
@@ -626,7 +631,11 @@ class Client():
             .one()
         )
 
-        import_.complete = True
+        if name is not None:
+            import_.name = name
+
+        if complete is not None:
+            import_.complete = complete
 
         self.session.add(import_)
         self.session.commit()
@@ -655,7 +664,46 @@ class Client():
         self.session.commit()
         return bfu_schema.dump(bfu)
 
-    def update_repository(self, uuid: str, name: str = None,
+    def update_bfu(self, uuid: str, name: Optional[str] = None,
+                   complete: Optional[bool] = None,
+                   images: Optional[List[SDict]] = None) -> SDict:
+        '''Update a BFU.
+
+        Args:
+            uuid: UUID of the BFU.
+            name: Updated name of the BFU. Default: `None` for no update.
+            complete: Updated completedness of the BFU. Default: `None` for no
+                update.
+            images: Updated list of images to register tio the BFU.
+
+        Returns:
+            The updated BFU.
+        '''
+
+        bfu = (
+            self.session.query(BFU)
+            .filter(BFU.uuid == uuid)
+            .one()
+        )
+
+        if name is not None:
+            bfu.name = name
+
+        if complete is not None:
+            bfu.complete = complete
+
+        if images is not None:
+            if bfu.complete is False:
+                raise DBError('Images can only be registered to a completed '
+                              'BFU.')
+            images = [Image(**image, bfu=bfu) for image in images]
+            self.session.add_all(images)
+
+        self.session.add(bfu)
+        self.session.commit()
+        return bfu_schema.dump(bfu)
+
+    def update_repository(self, uuid: str, name: Optional[str] = None,
                           raw_storage: Optional[str] = None) -> SDict:
         '''Update a repository.
 
