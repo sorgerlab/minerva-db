@@ -144,11 +144,21 @@ class TestImport():
             user_granted_read_hierarchy['import_uuid']
         )
 
-    def test_set_import_complete(self, client, db_import):
+    def test_update_import_name(self, client, db_import):
         keys = ('uuid', 'name', 'complete', 'repository_uuid')
         d = sa_obj_to_dict(db_import, keys)
+        import_ = client.update_import(db_import.uuid,
+                                       name='renamed')
+        d['name'] = 'renamed'
+        assert d == import_
+
+    def test_update_import_complete(self, client, db_import):
+        keys = ('uuid', 'name', 'complete', 'repository_uuid')
+        d = sa_obj_to_dict(db_import, keys)
+        import_ = client.update_import(db_import.uuid,
+                                       complete=True)
         d['complete'] = True
-        assert d == client.set_import_complete(db_import.uuid)
+        assert d == import_
 
 
 class TestBFU():
@@ -243,22 +253,29 @@ class TestBFU():
             user_granted_read_hierarchy['bfu_uuid']
         )
 
-    def test_set_bfu_complete(self, client, db_bfu):
+    def test_update_bfu_complete(self, client, db_bfu):
         keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
         d = sa_obj_to_dict(db_bfu, keys)
         d['complete'] = True
-        assert d == client.set_bfu_complete(db_bfu.uuid, images=[])
+        assert d == client.update_bfu(db_bfu.uuid, complete=True)
 
-    def test_set_bfu_complete_with_images(self, client, db_bfu):
+    def test_update_bfu_complete_with_images(self, client, db_bfu):
         keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
         d = sa_obj_to_dict(db_bfu, keys)
         d_image = sa_obj_to_dict(ImageFactory(), ['uuid', 'name',
                                                   'pyramid_levels'])
         d['complete'] = True
-        assert d == client.set_bfu_complete(db_bfu.uuid, images=[d_image])
+        assert d == client.update_bfu(db_bfu.uuid, complete=True,
+                                      images=[d_image])
         image = client.list_images_in_bfu(db_bfu.uuid)
         d_image['bfu_uuid'] = db_bfu.uuid
         assert [d_image] == image
+
+    def test_update_bfu_incomplete_with_images(self, client, db_bfu):
+        d_image = sa_obj_to_dict(ImageFactory(), ['uuid', 'name',
+                                                  'pyramid_levels'])
+        with pytest.raises(DBError):
+            client.update_bfu(db_bfu.uuid, images=[d_image])
 
 
 class TestImage():
