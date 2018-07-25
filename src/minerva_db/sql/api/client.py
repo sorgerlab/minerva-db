@@ -1,5 +1,4 @@
 from sqlalchemy.orm import Session
-from sqlalchemy.orm.exc import NoResultFound
 from typing import Dict, List, Optional, Union
 from ..models import (Subject, User, Group, Membership, Repository, Import,
                       BFU, Image, Key, Grant)
