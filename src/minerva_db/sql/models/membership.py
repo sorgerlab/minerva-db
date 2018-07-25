@@ -16,7 +16,7 @@ class Membership(Base):
     group = relationship('Group', back_populates='memberships')
     user = relationship('User', back_populates='memberships')
 
-    def __init__(self, group=None, user=None, membership_type='Member'):
+    def __init__(self, group, user, membership_type='Member'):
         self.group = group
         self.user = user
         self.membership_type = membership_type

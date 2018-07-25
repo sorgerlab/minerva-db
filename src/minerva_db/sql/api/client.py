@@ -44,7 +44,7 @@ class Client():
 
         user = self.session.query(User).filter(User.uuid == user_uuid).one()
         group = Group(uuid, name)
-        membership = Membership(group, user)
+        membership = Membership(group, user, 'Owner')
         self.session.add(group)
         self.session.add(membership)
         self.session.commit()

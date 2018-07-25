@@ -42,6 +42,12 @@ class TestGroup():
         assert d == client.create_group(user_uuid=db_user.uuid, **d)
         assert d == sa_obj_to_dict(session.query(Group).one(), keys)
 
+    def test_create_group_owner(self, client, session, db_user):
+        keys = ('uuid', 'name')
+        d = sa_obj_to_dict(GroupFactory(), keys)
+        client.create_group(user_uuid=db_user.uuid, **d)
+        assert session.query(Membership).one().membership_type == 'Owner'
+
     @pytest.mark.parametrize('duplicate_key', ['uuid', 'name'])
     def test_create_group_duplicate(self, client, db_user, duplicate_key):
         keys = ('uuid', 'name')
