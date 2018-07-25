@@ -45,8 +45,9 @@ class Client():
 
         user = self.session.query(User).filter(User.uuid == user_uuid).one()
         group = Group(uuid, name)
-        group.users.append(user)
+        membership = Membership(group, user)
         self.session.add(group)
+        self.session.add(membership)
         self.session.commit()
         return group_schema.dump(group)
 
@@ -67,13 +68,13 @@ class Client():
         self.session.commit()
         return user_schema.dump(user)
 
-    def create_membership(self, user_uuid: str, group_uuid: str,
+    def create_membership(self, group_uuid: str, user_uuid: str,
                           membership_type: str) -> SDict:
         '''Create a group membership with the specified user as the member.
 
         Args:
-            user_uuid: UUID of the user.
             group_uuid: UUID of the group.
+            user_uuid: UUID of the user.
             membership_type: Membership level the member shall be given.
 
         Returns:
@@ -92,7 +93,7 @@ class Client():
             .one()
         )
 
-        membership = Membership(user, group, membership_type)
+        membership = Membership(group, user, membership_type)
         self.session.add(membership)
         self.session.commit()
         return membership_schema.dump(membership)
@@ -221,32 +222,6 @@ class Client():
         self.session.add_all(s3_keys)
         self.session.commit()
         return import_
-
-    def add_users_to_group(self, group_uuid: str,
-                           user_uuids: List[str]):
-        '''Add users to the specified group.
-
-        Args:
-            group_uuid: UUID of the group.
-            user_uuids: UUIDs of the users.
-        '''
-
-        group = self.session.query(Group) \
-            .filter(Group.uuid == group_uuid) \
-            .one()
-
-        users = self.session.query(User) \
-            .filter(User.uuid.in_(user_uuids)) \
-            .all()
-
-        if len(users) != len(user_uuids):
-            missing_users = set(user_uuids) - {user.uuid for user in users}
-            raise NoResultFound('All required rows were not found. '
-                                'Missing User UUIDS: '
-                                ', '.join(missing_users))
-
-        group.users.extend(users)
-        self.session.commit()
 
     # TODO Make grant creation more standalone with external exposure?
     def grant_repository_to_subject(self, repository_uuid, subject_uuid,
@@ -394,46 +369,69 @@ class Client():
             .one()
         )
 
-    def is_member(self, user_uuid: str, group_uuid: str) -> bool:
+    def get_membership(self, group_uuid: str, user_uuid: str) -> SDict:
+        '''Get details of the membership.
+
+        Args:
+            group_uuid: UUID of the group.
+            user_uuid: UUID of the user.
+
+        Returns:
+            The membership details.
+
+        Raises:
+            ValueError: If there is not exactly one matching membership.
+        '''
+
+        return membership_schema.dump(
+            self.session.query(Membership)
+            .filter(Membership.group_uuid == group_uuid)
+            .filter(Membership.user_uuid == user_uuid)
+            .one()
+        )
+
+    def is_member(self, group_uuid: str, user_uuid: str,
+                  membership_type: Optional[str] = 'Member') -> bool:
         '''Determine if a user is a member of a group.
 
         Args:
-            user_uuid: UUID of the user.
             group_uuid: UUID of the group.
+            user_uuid: UUID of the user.
+            membership_type: The required membership type.
 
         Returns:
-            If user is a member or not.
+            If user is a member of the given membership level (or that is
+            implied by a level of membership that the member does have) or not.
         '''
+
+        # TODO Calculate this centrally driven from the model
+        # Calculate the memberships which imply the requested one
+        implied = [membership_type]
+        if membership_type == 'Member':
+            implied.append('Owner')
 
         q = (
             self.session.query(Membership)
-            .filter(Membership.user_uuid == user_uuid)
             .filter(Membership.group_uuid == group_uuid)
+            .filter(Membership.user_uuid == user_uuid)
+            .filter(Membership.membership_type.in_(implied))
             .exists()
         )
 
         return self.session.query(q).scalar()
 
-    def is_owner(self, user_uuid: str, group_uuid: str) -> bool:
+    def is_owner(self, group_uuid: str, user_uuid: str) -> bool:
         '''Determine if a user is a member of a group.
 
         Args:
-            user_uuid: UUID of the user.
             group_uuid: UUID of the group.
+            user_uuid: UUID of the user.
 
         Returns:
             If user is a member or not.
         '''
 
-        q = (
-            self.session.query(Membership)
-            .filter(Membership.user_uuid == user_uuid)
-            .filter(Membership.group_uuid == group_uuid)
-            .filter(Membership.membership_type == 'Owner')
-            .exists()
-        )
-
-        return self.session.query(q).scalar()
+        return self.is_member(group_uuid, user_uuid, 'Owner')
 
     def has_permission(self, user_uuid: str, resource_type: str,
                        resource_uuid: str,
@@ -641,29 +639,6 @@ class Client():
         self.session.commit()
         return import_schema.dump(import_)
 
-    def set_bfu_complete(self, uuid: str, images: List[SDict]) -> SDict:
-        '''Set the given BFU as complete and register the detected images.
-
-        Args:
-            uuid : UUID of the BFU.
-            images: Images to register in the BFU.
-
-        Returns:
-            The updated BFU.
-        '''
-
-        bfu = self.session.query(BFU) \
-            .filter(BFU.uuid == uuid) \
-            .one()
-
-        images = [Image(**image, bfu=bfu) for image in images]
-        bfu.complete = True
-
-        self.session.add(bfu)
-        self.session.add_all(images)
-        self.session.commit()
-        return bfu_schema.dump(bfu)
-
     def update_bfu(self, uuid: str, name: Optional[str] = None,
                    complete: Optional[bool] = None,
                    images: Optional[List[SDict]] = None) -> SDict:
@@ -742,6 +717,33 @@ class Client():
         self.session.commit()
         return repository_schema.dump(repository)
 
+    def update_membership(self, group_uuid: str, user_uuid: str,
+                          membership_type: Optional[str] = None) -> SDict:
+        '''Update a membership.
+
+        Args:
+            group_uuid: UUID of the group.
+            user_uuid: UUID of the user.
+            membership_type: Membership level the member shall be given.
+
+        Returns:
+            The updated membership.
+        '''
+
+        membership = (
+            self.session.query(Membership)
+            .filter(Membership.group_uuid == group_uuid)
+            .filter(Membership.user_uuid == user_uuid)
+            .one()
+        )
+
+        if membership_type is not None:
+            membership.membership_type = membership_type
+
+        self.session.add(membership)
+        self.session.commit()
+        return membership_schema.dump(membership)
+
     def delete_repository(self, uuid: str):
         '''Delete a repository and all contents.
 
@@ -758,4 +760,22 @@ class Client():
         # TODO Handle delete of raw/tiled objects in the calling method
         # Recovery from delete?
         self.session.delete(repository)
+        self.session.commit()
+
+    def delete_membership(self, group_uuid: str, user_uuid: str):
+        '''Delete a membership.
+
+        Args:
+            group_uuid: UUID of the group.
+            user_uuid: UUID of the user.
+        '''
+
+        membership = (
+            self.session.query(Membership)
+            .filter(Membership.group_uuid == group_uuid)
+            .filter(Membership.user_uuid == user_uuid)
+            .one()
+        )
+
+        self.session.delete(membership)
         self.session.commit()

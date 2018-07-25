@@ -285,7 +285,7 @@ def user_granted_read_hierarchy(session):
 def group_granted_read_hierarchy(session):
     user = UserFactory()
     group = GroupFactory()
-    membership = MembershipFactory(user=user, group=group,
+    membership = MembershipFactory(group=group, user=user,
                                    membership_type='Member')
     repository = RepositoryFactory()
     grant = GrantFactory(subject=group, repository=repository)
@@ -300,6 +300,9 @@ def group_granted_read_hierarchy(session):
     return {
         'user': user,
         'user_uuid': user.uuid,
+        'group': group,
+        'group_uuid': group.uuid,
+        'membership': membership,
         'repository': repository,
         'repository_uuid': repository.uuid,
         'grant': grant,
