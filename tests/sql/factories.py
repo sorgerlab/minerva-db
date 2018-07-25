@@ -27,8 +27,8 @@ class MembershipFactory(Factory):
     class Meta:
         model = Membership
 
-    user = SubFactory(UserFactory)
     group = SubFactory(GroupFactory)
+    user = SubFactory(UserFactory)
     membership_type = 'Member'
 
 
