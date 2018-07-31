@@ -9,13 +9,9 @@ class User(Subject):
     }
 
     uuid = Column(String(36), ForeignKey(Subject.uuid), primary_key=True)
-    name = Column(String(256), unique=True, nullable=False)
-    email = Column(String(256), unique=True, nullable=False)
 
     groups = relationship('Group', viewonly=True, secondary='t_membership')
     memberships = relationship('Membership', back_populates='user')
 
-    def __init__(self, uuid, name, email):
+    def __init__(self, uuid):
         self.uuid = uuid
-        self.name = name
-        self.email = email
