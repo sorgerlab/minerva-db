@@ -17,9 +17,7 @@ class UserFactory(Factory):
     class Meta:
         model = User
 
-    uuid = LazyAttribute(lambda o: o.name.lower().replace(' ', '_'))
-    name = Sequence(lambda n: f'user{n}')
-    email = LazyAttribute(lambda o: f'{o.name}@example.com'.lower())
+    uuid = Sequence(lambda n: f'user{n}')
 
 
 class MembershipFactory(Factory):

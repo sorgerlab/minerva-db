@@ -9,23 +9,24 @@ from .utils import sa_obj_to_dict
 class TestUser():
 
     def test_create_user(self, client, session):
-        keys = ('uuid', 'name', 'email')
+        keys = ('uuid',)
         d = sa_obj_to_dict(UserFactory(), keys)
         assert d == client.create_user(**d)
         assert d == sa_obj_to_dict(session.query(User).one(), keys)
 
-    @pytest.mark.parametrize('duplicate_key', ['uuid', 'name', 'email'])
+    @pytest.mark.parametrize('duplicate_key', ['uuid'])
     def test_create_user_duplicate(self, client, duplicate_key):
-        keys = ('uuid', 'name', 'email')
+        keys = ('uuid',)
         d1 = sa_obj_to_dict(UserFactory(), keys)
         d2 = sa_obj_to_dict(UserFactory(), keys)
         d2[duplicate_key] = d1[duplicate_key]
+        print(d1)
         client.create_user(**d1)
         with pytest.raises(IntegrityError):
             client.create_user(**d2)
 
     def test_get_user(self, client, db_user):
-        keys = ('uuid', 'name', 'email')
+        keys = ('uuid',)
         d = sa_obj_to_dict(db_user, keys)
         assert client.get_user(db_user.uuid) == d
 

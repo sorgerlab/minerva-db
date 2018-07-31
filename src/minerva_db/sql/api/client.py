@@ -50,19 +50,17 @@ class Client():
         self.session.commit()
         return group_schema.dump(group)
 
-    def create_user(self, uuid: str, name: str, email: str) -> SDict:
+    def create_user(self, uuid: str) -> SDict:
         '''Create a user.
 
         Args:
             uuid: UUID of the user.
-            name: Name of the user.
-            email: Email of the user.
 
         Returns:
             The newly created user.
         '''
 
-        user = User(uuid, name, email)
+        user = User(uuid)
         self.session.add(user)
         self.session.commit()
         return user_schema.dump(user)
