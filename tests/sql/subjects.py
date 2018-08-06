@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
 from minerva_db.sql.models import User, Group, Membership
+from minerva_db.sql.api.utils import to_jsonapi
 from .factories import GroupFactory, UserFactory, MembershipFactory
 from .utils import sa_obj_to_dict
 
@@ -11,7 +12,8 @@ class TestUser():
     def test_create_user(self, client, session):
         keys = ('uuid',)
         d = sa_obj_to_dict(UserFactory(), keys)
-        assert d == client.create_user(**d)
+
+        assert to_jsonapi(d) == client.create_user(**d)
         assert d == sa_obj_to_dict(session.query(User).one(), keys)
 
     @pytest.mark.parametrize('duplicate_key', ['uuid'])

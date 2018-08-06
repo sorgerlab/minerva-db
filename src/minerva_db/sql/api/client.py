@@ -7,7 +7,7 @@ from ..serializers import (user_schema, group_schema, repository_schema,
                            keys_schema, bfu_schema, bfus_schema, image_schema,
                            images_schema, grants_schema, membership_schema)
 from . import premade
-
+from .utils import to_jsonapi
 
 class DBError(Exception):
     pass
@@ -63,7 +63,7 @@ class Client():
         user = User(uuid)
         self.session.add(user)
         self.session.commit()
-        return user_schema.dump(user)
+        return to_jsonapi(user_schema.dump(user))
 
     def create_membership(self, group_uuid: str, user_uuid: str,
                           membership_type: str) -> SDict:

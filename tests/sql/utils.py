@@ -1,6 +1,8 @@
 from minerva_db.sql.models import Base
 from typing import Dict, List, Type, Union
 
+# TODO Refine type of Dict
+
 
 def sa_obj_to_dict(obj: Type[Base],
                    keys: List[str]) -> Dict[str, Union[int, str, float]]:
