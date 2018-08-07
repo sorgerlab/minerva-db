@@ -12,7 +12,6 @@ class TestUser():
     def test_create_user(self, client, session):
         keys = ('uuid',)
         d = sa_obj_to_dict(UserFactory(), keys)
-
         assert to_jsonapi(d) == client.create_user(**d)
         assert d == sa_obj_to_dict(session.query(User).one(), keys)
 
@@ -30,7 +29,7 @@ class TestUser():
     def test_get_user(self, client, db_user):
         keys = ('uuid',)
         d = sa_obj_to_dict(db_user, keys)
-        assert client.get_user(db_user.uuid) == d
+        assert to_jsonapi(d) == client.get_user(db_user.uuid)
 
     def test_get_user_nonexistant(self, client):
         with pytest.raises(NoResultFound):
@@ -42,7 +41,8 @@ class TestGroup():
     def test_create_group(self, client, session, db_user):
         keys = ('uuid', 'name')
         d = sa_obj_to_dict(GroupFactory(), keys)
-        assert d == client.create_group(user_uuid=db_user.uuid, **d)
+        assert to_jsonapi(d) == client.create_group(user_uuid=db_user.uuid,
+                                                    **d)
         assert d == sa_obj_to_dict(session.query(Group).one(), keys)
 
     def test_create_group_owner(self, client, session, db_user):
@@ -64,7 +64,7 @@ class TestGroup():
     def test_get_group(self, client, db_group):
         keys = ('uuid', 'name')
         d = sa_obj_to_dict(db_group, keys)
-        assert client.get_group(db_group.uuid) == d
+        assert to_jsonapi(d) == client.get_group(db_group.uuid)
 
     def test_get_group_nonexistant(self, client):
         with pytest.raises(NoResultFound):
@@ -79,7 +79,7 @@ class TestMembership():
         d['user_uuid'] = db_user.uuid
         d['group_uuid'] = db_group.uuid
         m = client.create_membership(db_group.uuid, db_user.uuid, 'Member')
-        assert d == m
+        assert to_jsonapi(d) == m
         assert d == sa_obj_to_dict(session.query(Membership).one(), keys)
 
     def test_create_membership_duplicate(self, client, session, db_user,
@@ -101,8 +101,8 @@ class TestMembership():
     def test_get_membership(self, client, db_membership):
         keys = ['user_uuid', 'group_uuid', 'membership_type']
         d = sa_obj_to_dict(db_membership, keys)
-        assert d == client.get_membership(db_membership.group_uuid,
-                                          db_membership.user_uuid)
+        assert to_jsonapi(d) == client.get_membership(db_membership.group_uuid,
+                                                      db_membership.user_uuid)
 
     def test_get_membership_nonexistant(self, client, db_user, db_group):
         with pytest.raises(NoResultFound):
@@ -116,9 +116,9 @@ class TestMembership():
         session.commit()
         d = sa_obj_to_dict(db_membership, keys)
         d['membership_type'] = 'Owner'
-
-        assert d == client.update_membership(db_group.uuid, db_user.uuid,
-                                             'Owner')
+        assert to_jsonapi(d) == client.update_membership(db_group.uuid,
+                                                         db_user.uuid,
+                                                         'Owner')
 
     def test_delete_membership(self, client, session,
                                group_granted_read_hierarchy):

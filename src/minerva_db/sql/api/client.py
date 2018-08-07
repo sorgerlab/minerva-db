@@ -9,6 +9,7 @@ from ..serializers import (user_schema, group_schema, repository_schema,
 from . import premade
 from .utils import to_jsonapi
 
+
 class DBError(Exception):
     pass
 
@@ -48,7 +49,7 @@ class Client():
         self.session.add(group)
         self.session.add(membership)
         self.session.commit()
-        return group_schema.dump(group)
+        return to_jsonapi(group_schema.dump(group))
 
     def create_user(self, uuid: str) -> SDict:
         '''Create a user.
@@ -93,7 +94,7 @@ class Client():
         membership = Membership(group, user, membership_type)
         self.session.add(membership)
         self.session.commit()
-        return membership_schema.dump(membership)
+        return to_jsonapi(membership_schema.dump(membership))
 
     # Resources
     def create_repository(self, uuid: str, name: str, user_uuid: str,
@@ -116,7 +117,7 @@ class Client():
         grant = Grant(user, repository, permission='Admin')
         self.session.add_all((repository, grant))
         self.session.commit()
-        return repository_schema.dump(repository)
+        return to_jsonapi(repository_schema.dump(repository))
 
     def create_import(self, uuid: str, name: str,
                       repository_uuid: str) -> SDict:
@@ -138,7 +139,7 @@ class Client():
         import_ = Import(uuid, name, repository)
         self.session.add(import_)
         self.session.commit()
-        return import_schema.dump(import_)
+        return to_jsonapi(import_schema.dump(import_))
 
     def create_bfu(self, uuid: str, name: str, reader: str,
                    keys: List[str], import_uuid: str) -> SDict:
@@ -174,7 +175,7 @@ class Client():
         self.session.add(bfu)
         self.session.add_all(s3_keys)
         self.session.commit()
-        return bfu_schema.dump(bfu)
+        return to_jsonapi(bfu_schema.dump(bfu))
 
     def create_image(self, uuid: str, name: str, pyramid_levels: int,
                      bfu_uuid: str) -> SDict:
@@ -197,72 +198,75 @@ class Client():
         image = Image(uuid, name, pyramid_levels, bfu)
         self.session.add(image)
         self.session.commit()
-        return image_schema.dump(image)
+        return to_jsonapi(image_schema.dump(image))
 
-    def add_keys_to_import(self, keys: List[str], import_uuid: str) -> SDict:
-        '''Create keys within the specified import.
+    # TODO Is this used?
+    # It doesn't use a serialized response
+    # def add_keys_to_import(self, keys: List[str], import_uuid: str) -> SDict:
+    #     '''Create keys within the specified import.
+    #
+    #     Args:
+    #         keys: UUID keys of the files.
+    #         import_uuid: UUID of the import.
+    #
+    #     Returns:
+    #         The import that the keys were added to.
+    #     '''
+    #
+    #     import_ = self.session.query(Import) \
+    #         .filter(Import.uuid == import_uuid) \
+    #         .one()
+    #
+    #     s3_keys = [Key(key, import_=import_) for key in keys]
+    #
+    #     self.session.add_all(s3_keys)
+    #     self.session.commit()
+    #     return import_
 
-        Args:
-            keys: UUID keys of the files.
-            import_uuid: UUID of the import.
-
-        Returns:
-            The import that the keys were added to.
-        '''
-
-        import_ = self.session.query(Import) \
-            .filter(Import.uuid == import_uuid) \
-            .one()
-
-        s3_keys = [Key(key, import_=import_) for key in keys]
-
-        self.session.add_all(s3_keys)
-        self.session.commit()
-        return import_
-
+    # TODO Is this used? It does not use serialized response
     # TODO Make grant creation more standalone with external exposure?
-    def grant_repository_to_subject(self, repository_uuid, subject_uuid,
-                                    permission: str) -> SDict:
-        '''Grant the specified repository to the specified subject.
-
-        Args:
-            repository_uuid: UUID of the repository.
-            subject_uuid: UUID of the subject.
-            permission: Permission to grant the group
-
-        Returns:
-            The grant that was created or updated.
-        '''
-
-        # TODO Get from enumeration in model or potentially catch
-        # psycopg2.DataError and rely on database to check
-        if permission not in ['Read', 'Write', 'Admin']:
-            raise ValueError(f'Specified permission invalid: {permission}')
-
-        grant = self.session.query(Grant) \
-            .filter(Grant.repository_uuid == repository_uuid) \
-            .filter(Grant.subject_uuid == subject_uuid) \
-            .one_or_none()
-
-        # No existing grant exists
-        if grant is None:
-            repository = self.session.query(Repository) \
-                .filter(Repository.uuid == repository_uuid) \
-                .one()
-
-            subject = self.session.query(Subject) \
-                .filter(Subject.uuid == subject_uuid) \
-                .one()
-
-            grant = Grant(subject, repository, permission)
-            self.session.add(grant)
-
-        # Grant exists, so potentially update permission
-        else:
-            grant.permission = permission
-
-        self.session.commit()
-        return grant
+    # def grant_repository_to_subject(self, repository_uuid, subject_uuid,
+    #                                 permission: str) -> SDict:
+    #     '''Grant the specified repository to the specified subject.
+    #
+    #     Args:
+    #         repository_uuid: UUID of the repository.
+    #         subject_uuid: UUID of the subject.
+    #         permission: Permission to grant the group
+    #
+    #     Returns:
+    #         The grant that was created or updated.
+    #     '''
+    #
+    #     # TODO Get from enumeration in model or potentially catch
+    #     # psycopg2.DataError and rely on database to check
+    #     if permission not in ['Read', 'Write', 'Admin']:
+    #         raise ValueError(f'Specified permission invalid: {permission}')
+    #
+    #     grant = self.session.query(Grant) \
+    #         .filter(Grant.repository_uuid == repository_uuid) \
+    #         .filter(Grant.subject_uuid == subject_uuid) \
+    #         .one_or_none()
+    #
+    #     # No existing grant exists
+    #     if grant is None:
+    #         repository = self.session.query(Repository) \
+    #             .filter(Repository.uuid == repository_uuid) \
+    #             .one()
+    #
+    #         subject = self.session.query(Subject) \
+    #             .filter(Subject.uuid == subject_uuid) \
+    #             .one()
+    #
+    #         grant = Grant(subject, repository, permission)
+    #         self.session.add(grant)
+    #
+    #     # Grant exists, so potentially update permission
+    #     else:
+    #         grant.permission = permission
+    #
+    #     self.session.commit()
+    #     return grant
 
     def get_bfu(self, uuid: str) -> SDict:
         '''Get details of the specified BFU.
@@ -274,11 +278,11 @@ class Client():
             The BFU details.
         '''
 
-        return bfu_schema.dump(
+        return to_jsonapi(bfu_schema.dump(
             self.session.query(BFU)
             .filter(BFU.uuid == uuid)
             .one()
-        )
+        ))
 
     def get_group(self, uuid: str) -> SDict:
         '''Get details of the specified group.
@@ -290,11 +294,11 @@ class Client():
             The group details.
         '''
 
-        return group_schema.dump(
+        return to_jsonapi(group_schema.dump(
             self.session.query(Group)
             .filter(Group.uuid == uuid)
             .one()
-        )
+        ))
 
     def get_image(self, uuid: str) -> SDict:
         '''Get details of the specified image.
@@ -306,11 +310,11 @@ class Client():
             The image details.
         '''
 
-        return image_schema.dump(
+        return to_jsonapi(image_schema.dump(
             self.session.query(Image)
             .filter(Image.uuid == uuid)
             .one()
-        )
+        ))
 
     def get_import(self, uuid: str) -> SDict:
         '''Get details of the specified import.
@@ -325,11 +329,11 @@ class Client():
             ValueError: If there is not exactly one matching import.
         '''
 
-        return import_schema.dump(
+        return to_jsonapi(import_schema.dump(
             self.session.query(Import)
             .filter(Import.uuid == uuid)
             .one()
-        )
+        ))
 
     def get_repository(self, uuid: str) -> SDict:
         '''Get details of the specified repository.
@@ -341,11 +345,11 @@ class Client():
             The repository details.
         '''
 
-        return repository_schema.dump(
+        return to_jsonapi(repository_schema.dump(
             self.session.query(Repository)
             .filter(Repository.uuid == uuid)
             .one()
-        )
+        ))
 
     def get_user(self, uuid: str) -> SDict:
         '''Get details of the specified user.
@@ -360,11 +364,11 @@ class Client():
             ValueError: If there is not exactly one matching user.
         '''
 
-        return user_schema.dump(
+        return to_jsonapi(user_schema.dump(
             self.session.query(User)
             .filter(User.uuid == uuid)
             .one()
-        )
+        ))
 
     def get_membership(self, group_uuid: str, user_uuid: str) -> SDict:
         '''Get details of the membership.
@@ -380,12 +384,12 @@ class Client():
             ValueError: If there is not exactly one matching membership.
         '''
 
-        return membership_schema.dump(
+        return to_jsonapi(membership_schema.dump(
             self.session.query(Membership)
             .filter(Membership.group_uuid == group_uuid)
             .filter(Membership.user_uuid == user_uuid)
             .one()
-        )
+        ))
 
     def is_member(self, group_uuid: str, user_uuid: str,
                   membership_type: Optional[str] = 'Member') -> bool:
@@ -494,6 +498,7 @@ class Client():
 
         return self.session.query(q).scalar()
 
+    # TODO Should be list grants?
     def list_repositories_for_user(
         self,
         uuid: str,
@@ -520,10 +525,12 @@ class Client():
         grants = q.all()
         repositories = [grant.repository for grant in grants]
 
-        return {
-            'grants': grants_schema.dump(grants),
-            'repositories': repositories_schema.dump(repositories)
-        }
+        return to_jsonapi(
+            grants_schema.dump(grants),
+            {
+                'repositories': repositories_schema.dump(repositories)
+            }
+        )
 
     def list_imports_in_repository(self, uuid: str) -> List[SDict]:
         '''List imports in given repository.
@@ -535,11 +542,11 @@ class Client():
             The list of imports in the repository.
         '''
 
-        return imports_schema.dump(
+        return to_jsonapi(imports_schema.dump(
             self.session.query(Import)
             .filter(Import.repository_uuid == uuid)
             .all()
-        )
+        ))
 
     def list_bfus_in_import(self, uuid: str) -> List[SDict]:
         '''List BFUs in given import.
@@ -551,11 +558,11 @@ class Client():
             The list of BFUs in the import.
         '''
 
-        return bfus_schema.dump(
+        return to_jsonapi(bfus_schema.dump(
             self.session.query(BFU)
             .filter(BFU.import_uuid == uuid)
             .all()
-        )
+        ))
 
     def list_keys_in_import(self, uuid: str) -> List[SDict]:
         '''List keys in given import.
@@ -567,11 +574,11 @@ class Client():
             The list of keys in the import.
         '''
 
-        return keys_schema.dump(
+        return to_jsonapi(keys_schema.dump(
             self.session.query(Key)
             .filter(Key.import_uuid == uuid)
             .all()
-        )
+        ))
 
     def list_images_in_bfu(self, uuid: str) -> List[SDict]:
         '''List images in given BFU.
@@ -583,11 +590,11 @@ class Client():
             The list of images in the BFU.
         '''
 
-        return images_schema.dump(
+        return to_jsonapi(images_schema.dump(
             self.session.query(Image)
             .filter(Image.bfu_uuid == uuid)
             .all()
-        )
+        ))
 
     def list_keys_in_bfu(self, uuid: str) -> List[SDict]:
         '''List keys in given BFU.
@@ -599,11 +606,11 @@ class Client():
             The list of keys in the BFU.
         '''
 
-        return keys_schema.dump(
+        return to_jsonapi(keys_schema.dump(
             self.session.query(Key)
             .filter(Key.bfu_uuid == uuid)
             .all()
-        )
+        ))
 
     def update_import(self, uuid: str, name: Optional[str] = None,
                       complete: Optional[bool] = None) -> SDict:
@@ -634,7 +641,7 @@ class Client():
 
         self.session.add(import_)
         self.session.commit()
-        return import_schema.dump(import_)
+        return to_jsonapi(import_schema.dump(import_))
 
     def update_bfu(self, uuid: str, name: Optional[str] = None,
                    complete: Optional[bool] = None,
@@ -673,7 +680,7 @@ class Client():
 
         self.session.add(bfu)
         self.session.commit()
-        return bfu_schema.dump(bfu)
+        return to_jsonapi(bfu_schema.dump(bfu))
 
     def update_repository(self, uuid: str, name: Optional[str] = None,
                           raw_storage: Optional[str] = None) -> SDict:
@@ -712,7 +719,7 @@ class Client():
         # Potentially use lifecycle to delete also to protect from mistakes?
         self.session.add(repository)
         self.session.commit()
-        return repository_schema.dump(repository)
+        return to_jsonapi(repository_schema.dump(repository))
 
     def update_membership(self, group_uuid: str, user_uuid: str,
                           membership_type: Optional[str] = None) -> SDict:
@@ -739,7 +746,7 @@ class Client():
 
         self.session.add(membership)
         self.session.commit()
-        return membership_schema.dump(membership)
+        return to_jsonapi(membership_schema.dump(membership))
 
     def delete_repository(self, uuid: str):
         '''Delete a repository and all contents.
