@@ -1,6 +1,6 @@
 import pytest
 from minerva_db.sql.api.utils import to_jsonapi
-from .utils import sa_obj_to_dict
+from . import sa_obj_to_dict
 
 
 @pytest.mark.parametrize('fixture_name', ['user_granted_read_hierarchy',

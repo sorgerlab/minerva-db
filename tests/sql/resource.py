@@ -7,7 +7,7 @@ from minerva_db.sql.models import (Repository, Import, BFU, Image, Key, User,
                                    Grant)
 from .factories import (RepositoryFactory, ImportFactory, BFUFactory,
                         ImageFactory, KeyFactory)
-from .utils import sa_obj_to_dict
+from . import sa_obj_to_dict
 
 
 class TestRepository():

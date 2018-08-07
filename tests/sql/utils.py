@@ -1,20 +1,30 @@
-from minerva_db.sql.models import Base
-from typing import Dict, List, Type, Union
-
-# TODO Refine type of Dict
+from minerva_db.sql.api.utils import to_jsonapi
 
 
-def sa_obj_to_dict(obj: Type[Base],
-                   keys: List[str]) -> Dict[str, Union[int, str, float]]:
-    '''Convert a SQL Alchemy object into a dictionary with the given keys.
+class TestUtils():
 
-    Args:
-        obj: The SQL Alchemy object.
-        keys: The keys to include in the returned dictionary.
+    def test_to_jsonapi(self):
+        data = {
+            'x': 1,
+            'y': 'foo'
+        }
+        included = {}
+        assert to_jsonapi(data) == {
+            'data': data,
+            'included': included
+        }
 
-    Returns:
-        A dictionary.
-    '''
-
-    obj_dict = obj.as_dict()
-    return {key: obj_dict[key] for key in keys}
+    def test_to_jsonapi_included(self):
+        data = {
+            'x': 1,
+            'y': 'foo'
+        }
+        included = {
+            'extras': [{
+                'a': 'A'
+            }]
+        }
+        assert to_jsonapi(data, included) == {
+            'data': data,
+            'included': included
+        }
