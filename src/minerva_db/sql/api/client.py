@@ -200,28 +200,22 @@ class Client():
         self.session.commit()
         return to_jsonapi(image_schema.dump(image))
 
-    # TODO Is this used?
-    # It doesn't use a serialized response
-    # def add_keys_to_import(self, keys: List[str], import_uuid: str) -> SDict:
-    #     '''Create keys within the specified import.
-    #
-    #     Args:
-    #         keys: UUID keys of the files.
-    #         import_uuid: UUID of the import.
-    #
-    #     Returns:
-    #         The import that the keys were added to.
-    #     '''
-    #
-    #     import_ = self.session.query(Import) \
-    #         .filter(Import.uuid == import_uuid) \
-    #         .one()
-    #
-    #     s3_keys = [Key(key, import_=import_) for key in keys]
-    #
-    #     self.session.add_all(s3_keys)
-    #     self.session.commit()
-    #     return import_
+    def add_keys_to_import(self, keys: List[str], import_uuid: str) -> SDict:
+        '''Create keys within the specified import.
+
+        Args:
+            keys: UUID keys of the files.
+            import_uuid: UUID of the import.
+        '''
+
+        import_ = self.session.query(Import) \
+            .filter(Import.uuid == import_uuid) \
+            .one()
+
+        s3_keys = [Key(key, import_=import_) for key in keys]
+
+        self.session.add_all(s3_keys)
+        self.session.commit()
 
     # TODO Is this used? It does not use serialized response
     # TODO Make grant creation more standalone with external exposure?
