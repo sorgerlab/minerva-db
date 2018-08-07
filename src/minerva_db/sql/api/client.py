@@ -1,6 +1,6 @@
 from sqlalchemy.orm import Session
 from typing import Dict, List, Optional, Union
-from ..models import (Subject, User, Group, Membership, Repository, Import,
+from ..models import (User, Group, Membership, Repository, Import,
                       BFU, Image, Key, Grant)
 from ..serializers import (user_schema, group_schema, repository_schema,
                            repositories_schema, import_schema, imports_schema,
