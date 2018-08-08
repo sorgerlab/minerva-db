@@ -1,5 +1,6 @@
 import pytest
-from .utils import sa_obj_to_dict
+from minerva_db.sql.api.utils import to_jsonapi
+from . import sa_obj_to_dict
 
 
 @pytest.mark.parametrize('fixture_name', ['user_granted_read_hierarchy',
@@ -115,10 +116,12 @@ class TestLists():
             user_granted_read_hierarchy['repository'],
             repository_keys
         )
-        assert {
-            'grants': [d_grant],
-            'repositories': [d_repository]
-        } == client.list_repositories_for_user(user_uuid)
+
+        assert to_jsonapi(
+            [d_grant], {
+                'repositories': [d_repository]
+            }
+        ) == client.list_repositories_for_user(user_uuid)
 
     @pytest.mark.parametrize('fixture_name', ['user_granted_read_hierarchy',
                                               'group_granted_read_hierarchy'])
@@ -136,16 +139,16 @@ class TestLists():
             hierarchy['repository'],
             repository_keys
         )
-        assert {
-            'grants': [d_grant],
-            'repositories': [d_repository]
-        } == client.list_repositories_for_user(user_uuid, implied=True)
+
+        assert to_jsonapi(
+            [d_grant], {
+                'repositories': [d_repository]
+            }
+        ) == client.list_repositories_for_user(user_uuid, implied=True)
 
     def test_list_repositories_for_user_none(self, client, db_user):
-        assert client.list_repositories_for_user(
-            db_user.uuid,
-            implied=True
-        ) == {
-            'grants': [],
-            'repositories': []
-        }
+        assert to_jsonapi(
+            [], {
+                'repositories': []
+            }
+        ) == client.list_repositories_for_user(db_user.uuid, implied=True)
