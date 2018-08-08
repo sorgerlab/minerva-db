@@ -124,68 +124,32 @@ def statements(statements_base):
 
 
 @pytest.fixture
-def group():
-    return GroupFactory()
-
-
-@pytest.fixture
-def user():
-    return UserFactory()
-
-
-@pytest.fixture
-def ownership():
-    return MembershipOwnerFactory()
-
-
-@pytest.fixture
-def membership():
-    return MembershipFactory()
-
-
-@pytest.fixture
-def repository():
-    return RepositoryFactory()
-
-
-@pytest.fixture
-def import_():
-    return ImportFactory()
-
-
-@pytest.fixture
-def bfu():
-    return BFUFactory()
-
-
-@pytest.fixture
-def image():
-    return ImageFactory()
-
-
-@pytest.fixture
-def db_group(session, group):
+def db_group(session):
+    group = GroupFactory()
     session.add(group)
     session.commit()
     return group
 
 
 @pytest.fixture
-def db_user(session, user):
+def db_user(session):
+    user = UserFactory()
     session.add(user)
     session.commit()
     return user
 
 
 @pytest.fixture
-def db_membership(session, membership):
+def db_membership(session):
+    membership = MembershipFactory()
     session.add(membership)
     session.commit()
     return membership
 
 
 @pytest.fixture
-def db_ownership(session, ownership):
+def db_ownership(session):
+    ownership = MembershipOwnerFactory()
     session.add(ownership)
     session.commit()
     return ownership
@@ -200,21 +164,24 @@ def db_users(session):
 
 
 @pytest.fixture
-def db_repository(session, repository):
+def db_repository(session):
+    repository = RepositoryFactory()
     session.add(repository)
     session.commit()
     return repository
 
 
 @pytest.fixture
-def db_import(session, import_):
+def db_import(session):
+    import_ = ImportFactory()
     session.add(import_)
     session.commit()
     return import_
 
 
 @pytest.fixture
-def db_import_with_keys(session, import_):
+def db_import_with_keys(session):
+    import_ = ImportFactory()
     session.add(import_)
     keys = KeyFactory.create_batch(5, import_=import_)
     session.add_all(keys)
@@ -223,14 +190,16 @@ def db_import_with_keys(session, import_):
 
 
 @pytest.fixture
-def db_bfu(session, bfu):
+def db_bfu(session):
+    bfu = BFUFactory()
     session.add(bfu)
     session.commit()
     return bfu
 
 
 @pytest.fixture
-def db_image(session, image):
+def db_image(session):
+    image = ImageFactory()
     session.add(image)
     session.commit()
     return image
