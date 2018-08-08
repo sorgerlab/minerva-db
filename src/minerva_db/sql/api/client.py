@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import Dict, List, Optional, Union
 from ..models import (User, Group, Membership, Repository, Import,
                       BFU, Image, Key, Grant)
@@ -378,12 +378,24 @@ class Client():
             ValueError: If there is not exactly one matching membership.
         '''
 
-        return to_jsonapi(membership_schema.dump(
+        membership = (
             self.session.query(Membership)
             .filter(Membership.group_uuid == group_uuid)
             .filter(Membership.user_uuid == user_uuid)
+            .options(
+                joinedload(Membership.group),
+                joinedload(Membership.user)
+            )
             .one()
-        ))
+        )
+
+        return to_jsonapi(
+            membership_schema.dump(membership),
+            {
+                'groups': [group_schema.dump(membership.group)],
+                'users': [user_schema.dump(membership.user)]
+            }
+        )
 
     def is_member(self, group_uuid: str, user_uuid: str,
                   membership_type: Optional[str] = 'Member') -> bool:
@@ -732,6 +744,10 @@ class Client():
             self.session.query(Membership)
             .filter(Membership.group_uuid == group_uuid)
             .filter(Membership.user_uuid == user_uuid)
+            .options(
+                joinedload(Membership.group),
+                joinedload(Membership.user)
+            )
             .one()
         )
 
@@ -740,7 +756,13 @@ class Client():
 
         self.session.add(membership)
         self.session.commit()
-        return to_jsonapi(membership_schema.dump(membership))
+        return to_jsonapi(
+            membership_schema.dump(membership),
+            {
+                'groups': [group_schema.dump(membership.group)],
+                'users': [user_schema.dump(membership.user)]
+            }
+        )
 
     def delete_repository(self, uuid: str):
         '''Delete a repository and all contents.
