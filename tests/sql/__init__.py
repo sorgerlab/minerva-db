@@ -25,23 +25,13 @@ def sa_obj_to_dict(obj: Type[Base],
 @contextmanager
 def statement_log(connection):
 
-    class StatementsBase():
-        def __init__(self):
-            self.statements = []
+    statements = []
 
-        def before_execute(self, conn, clauseelement, multiparams, params):
-            self.statements.append(clauseelement)
+    def before_execute(conn, clauseelement, multiparams, params):
+        statements.append(clauseelement)
 
-        def attach(self):
-            event.listen(connection, 'before_execute', self.before_execute)
-
-        def dettach(self):
-            event.remove(connection, "before_execute", self.before_execute)
-            self.statements = []
-
-    statements_base = StatementsBase()
-    statements_base.attach()
+    event.listen(connection, 'before_execute', before_execute)
     try:
-        yield statements_base.statements
+        yield statements
     finally:
-        statements_base.dettach()
+        event.remove(connection, "before_execute", before_execute)
