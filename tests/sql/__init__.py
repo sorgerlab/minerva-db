@@ -1,7 +1,10 @@
 from contextlib import contextmanager
 from minerva_db.sql.models import Base
 from sqlalchemy import event
+from sqlalchemy.engine import Connection
+from sqlalchemy.sql.base import Executable
 from typing import Dict, List, Type, Union
+
 
 # TODO Refine type of Dict
 
@@ -23,7 +26,15 @@ def sa_obj_to_dict(obj: Type[Base],
 
 
 @contextmanager
-def statement_log(connection):
+def statement_log(connection: Connection) -> List[Type[Executable]]:
+    '''For the duration of this context, record the executed statements.
+
+    Args:
+        connection: The SQL Alchemy Connection.
+
+    Yields:
+        The current list of statements.
+    '''
 
     statements = []
 
