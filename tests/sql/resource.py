@@ -7,7 +7,7 @@ from minerva_db.sql.models import (Repository, Import, BFU, Image, Key, User,
                                    Grant)
 from .factories import (RepositoryFactory, ImportFactory, BFUFactory,
                         ImageFactory, KeyFactory)
-from . import sa_obj_to_dict
+from . import sa_obj_to_dict, statement_log
 
 
 class TestRepository():
@@ -55,6 +55,13 @@ class TestRepository():
     def test_get_repository_nonexistant(self, client):
         with pytest.raises(NoResultFound):
             client.get_repository('nonexistant')
+
+    def test_get_repository_query_count(self, connection, client,
+                                        db_repository):
+        repository_uuid = db_repository.uuid
+        with statement_log(connection) as statements:
+            client.get_repository(repository_uuid)
+            assert len(statements) == 1
 
     def test_update_repository_name(self, client, db_repository):
         keys = ('uuid', 'name', 'raw_storage')
@@ -133,6 +140,12 @@ class TestImport():
         with pytest.raises(NoResultFound):
             client.get_import('nonexistant')
 
+    def test_get_import_query_count(self, connection, client, db_import):
+        import_uuid = db_import.uuid
+        with statement_log(connection) as statements:
+            client.get_import(import_uuid)
+            assert len(statements) == 1
+
     def test_list_imports_in_repository(self, client,
                                         user_granted_read_hierarchy):
         keys = ('uuid', 'name', 'complete', 'repository_uuid')
@@ -140,6 +153,14 @@ class TestImport():
         assert to_jsonapi([d]) == client.list_imports_in_repository(
             user_granted_read_hierarchy['repository_uuid']
         )
+
+    def test_list_imports_in_repository_query_count(
+        self, connection, client, user_granted_read_hierarchy
+    ):
+        repository_uuid = user_granted_read_hierarchy['repository_uuid']
+        with statement_log(connection) as statements:
+            client.list_imports_in_repository(repository_uuid)
+            assert len(statements) == 1
 
     # TODO Test class for Key?
     def test_list_keys_in_import(self, client,
@@ -149,6 +170,13 @@ class TestImport():
         assert to_jsonapi([d]) == client.list_keys_in_import(
             user_granted_read_hierarchy['import_uuid']
         )
+
+    def test_list_keys_in_import_query_count(self, connection, client,
+                                             user_granted_read_hierarchy):
+        import_uuid = user_granted_read_hierarchy['import_uuid']
+        with statement_log(connection) as statements:
+            client.list_keys_in_import(import_uuid)
+            assert len(statements) == 1
 
     def test_update_import_name(self, client, db_import):
         keys = ('uuid', 'name', 'complete', 'repository_uuid')
@@ -244,6 +272,12 @@ class TestBFU():
         with pytest.raises(NoResultFound):
             client.get_bfu('nonexistant')
 
+    def test_get_bfu_query_count(self, connection, client, db_bfu):
+        bfu_uuid = db_bfu.uuid
+        with statement_log(connection) as statements:
+            client.get_bfu(bfu_uuid)
+            assert len(statements) == 1
+
     def test_list_bfus_in_import(self, client,
                                  user_granted_read_hierarchy):
         keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
@@ -251,6 +285,13 @@ class TestBFU():
         assert to_jsonapi([d]) == client.list_bfus_in_import(
             user_granted_read_hierarchy['import_uuid']
         )
+
+    def test_list_bfus_in_import_query_count(self, connection, client,
+                                             user_granted_read_hierarchy):
+        import_uuid = user_granted_read_hierarchy['import_uuid']
+        with statement_log(connection) as statements:
+            client.list_bfus_in_import(import_uuid)
+            assert len(statements) == 1
 
     # TODO Test class for Key?
     def test_list_keys_in_bfu(self, client,
@@ -260,6 +301,13 @@ class TestBFU():
         assert to_jsonapi([d]) == client.list_keys_in_bfu(
             user_granted_read_hierarchy['bfu_uuid']
         )
+
+    def test_list_keys_in_bfu_query_count(self, connection, client,
+                                          user_granted_read_hierarchy):
+        bfu_uuid = user_granted_read_hierarchy['bfu_uuid']
+        with statement_log(connection) as statements:
+            client.list_keys_in_bfu(bfu_uuid)
+            assert len(statements) == 1
 
     def test_update_bfu_complete(self, client, db_bfu):
         keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
@@ -326,6 +374,12 @@ class TestImage():
         with pytest.raises(NoResultFound):
             client.get_image('nonexistant')
 
+    def test_get_image_query_count(self, connection, client, db_image):
+        image_uuid = db_image.uuid
+        with statement_log(connection) as statements:
+            client.get_image(image_uuid)
+            assert len(statements) == 1
+
     def test_list_images_in_bfu(self, client,
                                 user_granted_read_hierarchy):
         keys = ('uuid', 'name', 'pyramid_levels', 'bfu_uuid')
@@ -333,3 +387,10 @@ class TestImage():
         assert to_jsonapi([d]) == client.list_images_in_bfu(
             user_granted_read_hierarchy['bfu_uuid']
         )
+
+    def test_list_images_in_bfu_query_count(self, connection, client,
+                                            user_granted_read_hierarchy):
+        bfu_uuid = user_granted_read_hierarchy['bfu_uuid']
+        with statement_log(connection) as statements:
+            client.list_images_in_bfu(bfu_uuid)
+            assert len(statements) == 1

@@ -1,6 +1,6 @@
 import pytest
 from minerva_db.sql.api.utils import to_jsonapi
-from . import sa_obj_to_dict
+from . import sa_obj_to_dict, statement_log
 
 
 @pytest.mark.parametrize('fixture_name', ['user_granted_read_hierarchy',
@@ -152,3 +152,10 @@ class TestLists():
                 'repositories': []
             }
         ) == client.list_repositories_for_user(db_user.uuid, implied=True)
+
+    def test_list_repositories_for_user_query_count(self, connection, client,
+                                                    db_user):
+        user_uuid = db_user.uuid
+        with statement_log(connection) as statements:
+            client.list_repositories_for_user(user_uuid)
+            assert len(statements) == 1
