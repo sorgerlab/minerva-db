@@ -4,7 +4,7 @@ from .base import Base
 from .import_ import Import
 
 
-class BFU(Base):
+class Fileset(Base):
     uuid = Column(String(36), primary_key=True)
     name = Column(String(256), nullable=False)
     reader = Column(String(256), nullable=False)
@@ -13,9 +13,9 @@ class BFU(Base):
     complete = Column(Boolean, nullable=False)
     import_uuid = Column(String(36), ForeignKey(Import.uuid), nullable=False)
 
-    import_ = relationship('Import', back_populates='bfus')
-    keys = relationship('Key', back_populates='bfu')
-    images = relationship('Image', back_populates='bfu',
+    import_ = relationship('Import', back_populates='filesets')
+    keys = relationship('Key', back_populates='fileset')
+    images = relationship('Image', back_populates='fileset',
                           cascade='all, delete-orphan')
 
     def __init__(self, uuid, name, reader, reader_software, reader_version,

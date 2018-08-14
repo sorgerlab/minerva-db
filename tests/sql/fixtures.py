@@ -6,7 +6,8 @@ from minerva_db.sql.models import Base
 from .factories import (GroupFactory, UserFactory, MembershipFactory,
                         MembershipOwnerFactory, RepositoryFactory,
                         GrantFactory, GrantAdminFactory, ImportFactory,
-                        BFUFactory, ImageFactory, KeyFactory, KeyBFUFactory)
+                        FilesetFactory, ImageFactory, KeyFactory,
+                        KeyFilesetFactory)
 
 
 @pytest.fixture(scope='session')
@@ -190,11 +191,11 @@ def db_import_with_keys(session):
 
 
 @pytest.fixture
-def db_bfu(session):
-    bfu = BFUFactory()
-    session.add(bfu)
+def db_fileset(session):
+    fileset = FilesetFactory()
+    session.add(fileset)
     session.commit()
-    return bfu
+    return fileset
 
 
 @pytest.fixture
@@ -228,11 +229,11 @@ def user_granted_read_hierarchy(session):
     repository = RepositoryFactory()
     grant = GrantFactory(subject=user, repository=repository)
     import_ = ImportFactory(repository=repository)
-    bfu = BFUFactory(import_=import_)
-    image = ImageFactory(bfu=bfu)
-    key = KeyBFUFactory(import_=import_, bfu=bfu)
+    fileset = FilesetFactory(import_=import_)
+    image = ImageFactory(fileset=fileset)
+    key = KeyFilesetFactory(import_=import_, fileset=fileset)
 
-    session.add_all([user, repository, grant, import_, bfu, key, image])
+    session.add_all([user, repository, grant, import_, fileset, key, image])
     session.commit()
     return {
         'user': user,
@@ -242,8 +243,8 @@ def user_granted_read_hierarchy(session):
         'grant': grant,
         'import_': import_,
         'import_uuid': import_.uuid,
-        'bfu': bfu,
-        'bfu_uuid': bfu.uuid,
+        'fileset': fileset,
+        'fileset_uuid': fileset.uuid,
         'key': key,
         'image': image,
         'image_uuid': image.uuid
@@ -259,12 +260,12 @@ def group_granted_read_hierarchy(session):
     repository = RepositoryFactory()
     grant = GrantFactory(subject=group, repository=repository)
     import_ = ImportFactory(repository=repository)
-    bfu = BFUFactory(import_=import_)
-    key = KeyBFUFactory(import_=import_, bfu=bfu)
-    image = ImageFactory(bfu=bfu)
+    fileset = FilesetFactory(import_=import_)
+    key = KeyFilesetFactory(import_=import_, fileset=fileset)
+    image = ImageFactory(fileset=fileset)
 
-    session.add_all([user, group, membership, repository, grant, import_, bfu,
-                     key, image])
+    session.add_all([user, group, membership, repository, grant, import_,
+                     fileset, key, image])
     session.commit()
     return {
         'user': user,
@@ -277,8 +278,8 @@ def group_granted_read_hierarchy(session):
         'grant': grant,
         'import_': import_,
         'import_uuid': import_.uuid,
-        'bfu': bfu,
-        'bfu_uuid': bfu.uuid,
+        'fileset': fileset,
+        'fileset_uuid': fileset.uuid,
         'key': key,
         'image': image,
         'image_uuid': image.uuid

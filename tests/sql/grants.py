@@ -55,25 +55,28 @@ class TestGrants():
                                          'Read')
         assert False is decision
 
-    def test_bfu(self, client, fixture_name, request):
+    def test_fileset(self, client, fixture_name, request):
         hierarchy = request.getfuncargvalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
-        bfu_uuid = hierarchy['bfu'].uuid
-        decision = client.has_permission(user_uuid, 'BFU', bfu_uuid, 'Read')
+        fileset_uuid = hierarchy['fileset'].uuid
+        decision = client.has_permission(user_uuid, 'Fileset', fileset_uuid,
+                                         'Read')
         assert True is decision
 
-    def test_bfu_insufficent(self, client, fixture_name, request):
+    def test_fileset_insufficent(self, client, fixture_name, request):
         hierarchy = request.getfuncargvalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
-        bfu_uuid = hierarchy['bfu'].uuid
-        decision = client.has_permission(user_uuid, 'BFU', bfu_uuid, 'Write')
+        fileset_uuid = hierarchy['fileset'].uuid
+        decision = client.has_permission(user_uuid, 'Fileset', fileset_uuid,
+                                         'Write')
         assert False is decision
 
-    def test_bfu_none(self, client, db_user, fixture_name, request):
+    def test_fileset_none(self, client, db_user, fixture_name, request):
         hierarchy = request.getfuncargvalue(fixture_name)
         user_uuid = db_user.uuid
-        bfu_uuid = hierarchy['bfu'].uuid
-        decision = client.has_permission(user_uuid, 'BFU', bfu_uuid, 'Read')
+        fileset_uuid = hierarchy['fileset'].uuid
+        decision = client.has_permission(user_uuid, 'Fileset', fileset_uuid,
+                                         'Read')
         assert False is decision
 
     def test_image(self, client, fixture_name, request):
