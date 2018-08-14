@@ -142,7 +142,8 @@ class Client():
         return to_jsonapi(import_schema.dump(import_))
 
     def create_bfu(self, uuid: str, name: str, reader: str,
-                   keys: List[str], import_uuid: str) -> SDict:
+                   reader_software: str, reader_version: str, keys: List[str],
+                   import_uuid: str) -> SDict:
         '''Create a Bio-Formats Unit (BFU) within the specified import.
 
         Associates the given files.
@@ -151,7 +152,9 @@ class Client():
         Args:
             uuid: UUID of the BFU.
             name: Name of the BFU.
-            reader: Bio-Formats reader used to read the BFU.
+            reader: Specific reader used to read the BFU.
+            reader_software: Software used to read this BFU.
+            reader_version: Version of software used to read this BFU.
             keys: Keys of the associated files, the first entry is
                 the entrypoint.
             import_uuid: UUID of the import.
@@ -163,7 +166,7 @@ class Client():
         import_ = self.session.query(Import) \
             .filter(Import.uuid == import_uuid) \
             .one()
-        bfu = BFU(uuid, name, reader, import_)
+        bfu = BFU(uuid, name, reader, reader_software, reader_version, import_)
         s3_keys = self.session.query(Key) \
             .filter(Key.import_uuid == import_uuid) \
             .filter(Key.key.in_(keys)) \
@@ -659,7 +662,7 @@ class Client():
             name: Updated name of the BFU. Default: `None` for no update.
             complete: Updated completedness of the BFU. Default: `None` for no
                 update.
-            images: Updated list of images to register tio the BFU.
+            images: Updated list of images to register to the BFU.
 
         Returns:
             The updated BFU.

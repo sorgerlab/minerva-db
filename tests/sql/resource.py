@@ -199,7 +199,7 @@ class TestBFU():
 
     def test_create_bfu(self, client, session, db_import_with_keys):
         db_keys = [key.key for key in db_import_with_keys.keys[:2]]
-        keys = ('uuid', 'name', 'reader')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version')
         bfu = BFUFactory()
         create_d = sa_obj_to_dict(bfu, keys)
         keys += ('complete',)
@@ -219,7 +219,7 @@ class TestBFU():
     @pytest.mark.parametrize('duplicate_key', ['uuid'])
     def test_create_bfu_duplicate(self, client, db_import,
                                   duplicate_key):
-        keys = ('uuid', 'name', 'reader')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version')
         d1 = sa_obj_to_dict(BFUFactory(), keys)
         d2 = sa_obj_to_dict(BFUFactory(), keys)
         d2[duplicate_key] = d1[duplicate_key]
@@ -231,7 +231,7 @@ class TestBFU():
 
     def test_create_bfu_duplicate_key(self, client, db_import_with_keys):
         db_keys = [db_import_with_keys.keys[0].key]
-        keys = ('uuid', 'name', 'reader')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version')
         d1 = sa_obj_to_dict(BFUFactory(), keys)
         d2 = sa_obj_to_dict(BFUFactory(), keys)
         client.create_bfu(import_uuid=db_import_with_keys.uuid, keys=db_keys,
@@ -241,14 +241,14 @@ class TestBFU():
                               keys=db_keys, **d2)
 
     def test_create_bfu_nonexistant_import(self, client, session):
-        keys = ('uuid', 'name', 'reader')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version')
         d = sa_obj_to_dict(BFUFactory(), keys)
         with pytest.raises(NoResultFound):
             client.create_bfu(import_uuid='nonexistant', keys=[], **d)
 
     def test_create_bfu_with_duplicate_key_in_different_imports(self, client,
                                                                 session):
-        keys = ('uuid', 'name', 'reader')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version')
         import1 = ImportFactory()
         import2 = ImportFactory()
         key1 = KeyFactory(import_=import1, key='key')
@@ -264,7 +264,8 @@ class TestBFU():
         client.create_bfu(import_uuid=import2.uuid, keys=['key'], **d2)
 
     def test_get_bfu(self, client, db_bfu):
-        keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version',
+                'complete', 'import_uuid')
         d = sa_obj_to_dict(db_bfu, keys)
         assert to_jsonapi(d) == client.get_bfu(db_bfu.uuid)
 
@@ -280,7 +281,8 @@ class TestBFU():
 
     def test_list_bfus_in_import(self, client,
                                  user_granted_read_hierarchy):
-        keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version',
+                'complete', 'import_uuid')
         d = sa_obj_to_dict(user_granted_read_hierarchy['bfu'], keys)
         assert to_jsonapi([d]) == client.list_bfus_in_import(
             user_granted_read_hierarchy['import_uuid']
@@ -310,13 +312,15 @@ class TestBFU():
             assert len(statements) == 1
 
     def test_update_bfu_complete(self, client, db_bfu):
-        keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version',
+                'complete', 'import_uuid')
         d = sa_obj_to_dict(db_bfu, keys)
         d['complete'] = True
         assert to_jsonapi(d) == client.update_bfu(db_bfu.uuid, complete=True)
 
     def test_update_bfu_complete_with_images(self, client, db_bfu):
-        keys = ('uuid', 'name', 'reader', 'complete', 'import_uuid')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version',
+                'complete', 'import_uuid')
         d = sa_obj_to_dict(db_bfu, keys)
         d_image = sa_obj_to_dict(ImageFactory(), ['uuid', 'name',
                                                   'pyramid_levels'])

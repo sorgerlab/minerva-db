@@ -86,6 +86,8 @@ class BFUFactory(Factory):
     uuid = LazyAttribute(lambda o: o.name.lower().replace(' ', '_'))
     name = Sequence(lambda n: f'bfu{n}')
     reader = 'reader'
+    reader_software = 'BioFormats'
+    reader_version = '1.0.0'
     complete = False
     import_ = SubFactory(ImportFactory)
 
