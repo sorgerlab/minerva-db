@@ -217,17 +217,14 @@ class TestFileset():
         assert set(db_keys) == {key.key for key in fileset.keys}
 
     @pytest.mark.parametrize('duplicate_key', ['uuid'])
-    def test_create_fileset_duplicate(self, client, db_import,
-                                  duplicate_key):
+    def test_create_fileset_duplicate(self, client, db_import, duplicate_key):
         keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version')
         d1 = sa_obj_to_dict(FilesetFactory(), keys)
         d2 = sa_obj_to_dict(FilesetFactory(), keys)
         d2[duplicate_key] = d1[duplicate_key]
-        client.create_fileset(import_uuid=db_import.uuid, keys=[],
-                          **d1)
+        client.create_fileset(import_uuid=db_import.uuid, keys=[], **d1)
         with pytest.raises(IntegrityError):
-            client.create_fileset(import_uuid=db_import.uuid,
-                              keys=[], **d2)
+            client.create_fileset(import_uuid=db_import.uuid, keys=[], **d2)
 
     def test_create_fileset_duplicate_key(self, client, db_import_with_keys):
         db_keys = [db_import_with_keys.keys[0].key]

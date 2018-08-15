@@ -655,15 +655,15 @@ class Client():
         return to_jsonapi(import_schema.dump(import_))
 
     def update_fileset(self, uuid: str, name: Optional[str] = None,
-                   complete: Optional[bool] = None,
-                   images: Optional[List[SDict]] = None) -> SDict:
+                       complete: Optional[bool] = None,
+                       images: Optional[List[SDict]] = None) -> SDict:
         '''Update a Fileset.
 
         Args:
             uuid: UUID of the Fileset.
             name: Updated name of the Fileset. Default: `None` for no update.
-            complete: Updated completedness of the Fileset. Default: `None` for no
-                update.
+            complete: Updated completedness of the Fileset. Default: `None`
+                for no update.
             images: Updated list of images to register to the Fileset.
 
         Returns:

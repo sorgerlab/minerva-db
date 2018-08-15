@@ -1,6 +1,6 @@
 from factory import Factory, SubFactory, LazyAttribute, Sequence
-from minerva_db.sql.models import (User, Group, Repository, Import, Key, Fileset,
-                                   Image, Grant, Membership)
+from minerva_db.sql.models import (User, Group, Repository, Import, Key,
+                                   Fileset, Image, Grant, Membership)
 
 
 class GroupFactory(Factory):
