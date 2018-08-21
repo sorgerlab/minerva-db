@@ -12,8 +12,8 @@ class Import(Base):
                              nullable=False)
 
     repository = relationship('Repository', back_populates='imports')
-    bfus = relationship('BFU', back_populates='import_',
-                        cascade='all, delete-orphan')
+    filesets = relationship('Fileset', back_populates='import_',
+                            cascade='all, delete-orphan')
     keys = relationship('Key', back_populates='import_',
                         cascade='all, delete-orphan')
 

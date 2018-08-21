@@ -4,7 +4,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from minerva_db.sql.models import User, Group, Membership
 from minerva_db.sql.api.utils import to_jsonapi
 from .factories import GroupFactory, UserFactory, MembershipFactory
-from . import sa_obj_to_dict
+from . import sa_obj_to_dict, statement_log
 
 
 class TestUser():
@@ -34,6 +34,12 @@ class TestUser():
     def test_get_user_nonexistant(self, client):
         with pytest.raises(NoResultFound):
             client.get_user('nonexistant')
+
+    def test_get_user_query_count(self, connection, client, db_user):
+        user_uuid = db_user.uuid
+        with statement_log(connection) as statements:
+            client.get_user(user_uuid)
+            assert len(statements) == 1
 
 
 class TestGroup():
@@ -70,6 +76,12 @@ class TestGroup():
         with pytest.raises(NoResultFound):
             client.get_group('nonexistant')
 
+    def test_get_group_query_count(self, connection, client, db_group):
+        group_uuid = db_group.uuid
+        with statement_log(connection) as statements:
+            client.get_group(group_uuid)
+            assert len(statements) == 1
+
 
 class TestMembership():
 
@@ -99,14 +111,32 @@ class TestMembership():
             client.create_membership(db_group.uuid, 'nonexistant', 'Member')
 
     def test_get_membership(self, client, db_membership):
-        keys = ['user_uuid', 'group_uuid', 'membership_type']
-        d = sa_obj_to_dict(db_membership, keys)
-        assert to_jsonapi(d) == client.get_membership(db_membership.group_uuid,
-                                                      db_membership.user_uuid)
+        membership_keys = ('user_uuid', 'group_uuid', 'membership_type')
+        group_keys = ('uuid', 'name')
+        user_keys = ('uuid',)
+        d_membership = sa_obj_to_dict(db_membership, membership_keys)
+        d_group = sa_obj_to_dict(db_membership.group, group_keys)
+        d_user = sa_obj_to_dict(db_membership.user, user_keys)
+        assert to_jsonapi(
+            d_membership,
+            {
+                'groups': [d_group],
+                'users': [d_user]
+            }
+        ) == client.get_membership(db_membership.group_uuid,
+                                   db_membership.user_uuid)
 
     def test_get_membership_nonexistant(self, client, db_user, db_group):
         with pytest.raises(NoResultFound):
             client.get_membership(db_group.uuid, db_user.uuid)
+
+    def test_get_membership_query_count(self, connection, client,
+                                        db_membership):
+        group_uuid = db_membership.group_uuid
+        user_uuid = db_membership.user_uuid
+        with statement_log(connection) as statements:
+            client.get_membership(group_uuid, user_uuid)
+            assert len(statements) == 1
 
     def test_update_membership(self, client, session, db_user, db_group):
         keys = ['user_uuid', 'group_uuid', 'membership_type']
@@ -116,9 +146,11 @@ class TestMembership():
         session.commit()
         d = sa_obj_to_dict(db_membership, keys)
         d['membership_type'] = 'Owner'
-        assert to_jsonapi(d) == client.update_membership(db_group.uuid,
-                                                         db_user.uuid,
-                                                         'Owner')
+        assert to_jsonapi(d)['data'] == client.update_membership(
+            db_group.uuid,
+            db_user.uuid,
+            'Owner'
+        )['data']
 
     def test_delete_membership(self, client, session,
                                group_granted_read_hierarchy):

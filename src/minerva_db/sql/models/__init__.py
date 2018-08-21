@@ -8,7 +8,7 @@ from .group import Group
 from .user import User
 from .repository import Repository
 from .import_ import Import
-from .bfu import BFU
+from .fileset import Fileset
 from .image import Image
 from .key import Key
 
@@ -33,5 +33,5 @@ SubjectWithPolymorphic = with_polymorphic(Subject, [User, Group], flat=True)
 
 
 __all__ = ['Base', 'Membership', 'Grant', 'Subject', 'Group', 'User',
-           'Repository', 'Import', 'BFU', 'Image', 'Key',
+           'Repository', 'Import', 'Fileset', 'Image', 'Key',
            'SubjectWithPolymorphic']

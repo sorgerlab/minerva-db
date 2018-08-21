@@ -1,11 +1,12 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import Dict, List, Optional, Union
 from ..models import (User, Group, Membership, Repository, Import,
-                      BFU, Image, Key, Grant)
+                      Fileset, Image, Key, Grant)
 from ..serializers import (user_schema, group_schema, repository_schema,
                            repositories_schema, import_schema, imports_schema,
-                           keys_schema, bfu_schema, bfus_schema, image_schema,
-                           images_schema, grants_schema, membership_schema)
+                           keys_schema, fileset_schema, filesets_schema,
+                           image_schema, images_schema, grants_schema,
+                           membership_schema)
 from . import premade
 from .utils import to_jsonapi
 
@@ -141,61 +142,65 @@ class Client():
         self.session.commit()
         return to_jsonapi(import_schema.dump(import_))
 
-    def create_bfu(self, uuid: str, name: str, reader: str,
-                   keys: List[str], import_uuid: str) -> SDict:
-        '''Create a Bio-Formats Unit (BFU) within the specified import.
+    def create_fileset(self, uuid: str, name: str, reader: str,
+                       reader_software: str, reader_version: str,
+                       keys: List[str], import_uuid: str) -> SDict:
+        '''Create a fileset within the specified import.
 
         Associates the given files.
-        Also known as a fileset
 
         Args:
-            uuid: UUID of the BFU.
-            name: Name of the BFU.
-            reader: Bio-Formats reader used to read the BFU.
+            uuid: UUID of the Fileset.
+            name: Name of the Fileset.
+            reader: Specific reader used to read the Fileset.
+            reader_software: Software used to read this Fileset.
+            reader_version: Version of software used to read this Fileset.
             keys: Keys of the associated files, the first entry is
                 the entrypoint.
             import_uuid: UUID of the import.
 
         Returns:
-            The newly created BFU.
+            The newly created Fileset.
         '''
 
         import_ = self.session.query(Import) \
             .filter(Import.uuid == import_uuid) \
             .one()
-        bfu = BFU(uuid, name, reader, import_)
+        fileset = Fileset(uuid, name, reader, reader_software, reader_version,
+                          import_)
         s3_keys = self.session.query(Key) \
             .filter(Key.import_uuid == import_uuid) \
             .filter(Key.key.in_(keys)) \
             .all()
         for key in s3_keys:
-            if key.bfu is not None:
-                raise DBError(f'Key is already used by another BFU: {key.key}')
-            key.bfu = bfu
-        self.session.add(bfu)
+            if key.fileset is not None:
+                raise DBError('Key is already used by another Fileset:'
+                              f'{key.key}')
+            key.fileset = fileset
+        self.session.add(fileset)
         self.session.add_all(s3_keys)
         self.session.commit()
-        return to_jsonapi(bfu_schema.dump(bfu))
+        return to_jsonapi(fileset_schema.dump(fileset))
 
     def create_image(self, uuid: str, name: str, pyramid_levels: int,
-                     bfu_uuid: str) -> SDict:
-        '''Create image within the specified BFU.
+                     fileset_uuid: str) -> SDict:
+        '''Create image within the specified Fileset.
 
         Args:
             uuid : UUID of the image.
             name: Name of the import.
             pyramid_levels: Number of pyramid levels.
-            bfu_uuid: UUID of the BFU.
+            fileset_uuid: UUID of the Fileset.
 
         Returns:
             The newly create image.
         '''
 
-        bfu = self.session.query(BFU) \
-            .filter(BFU.uuid == bfu_uuid) \
+        fileset = self.session.query(Fileset) \
+            .filter(Fileset.uuid == fileset_uuid) \
             .one()
 
-        image = Image(uuid, name, pyramid_levels, bfu)
+        image = Image(uuid, name, pyramid_levels, fileset)
         self.session.add(image)
         self.session.commit()
         return to_jsonapi(image_schema.dump(image))
@@ -262,19 +267,19 @@ class Client():
     #     self.session.commit()
     #     return grant
 
-    def get_bfu(self, uuid: str) -> SDict:
-        '''Get details of the specified BFU.
+    def get_fileset(self, uuid: str) -> SDict:
+        '''Get details of the specified Fileset.
 
         Args:
-            uuid: UUID of the BFU.
+            uuid: UUID of the Fileset.
 
         Returns:
-            The BFU details.
+            The Fileset details.
         '''
 
-        return to_jsonapi(bfu_schema.dump(
-            self.session.query(BFU)
-            .filter(BFU.uuid == uuid)
+        return to_jsonapi(fileset_schema.dump(
+            self.session.query(Fileset)
+            .filter(Fileset.uuid == uuid)
             .one()
         ))
 
@@ -378,12 +383,24 @@ class Client():
             ValueError: If there is not exactly one matching membership.
         '''
 
-        return to_jsonapi(membership_schema.dump(
+        membership = (
             self.session.query(Membership)
             .filter(Membership.group_uuid == group_uuid)
             .filter(Membership.user_uuid == user_uuid)
+            .options(
+                joinedload(Membership.group),
+                joinedload(Membership.user)
+            )
             .one()
-        ))
+        )
+
+        return to_jsonapi(
+            membership_schema.dump(membership),
+            {
+                'groups': [group_schema.dump(membership.group)],
+                'users': [user_schema.dump(membership.user)]
+            }
+        )
 
     def is_member(self, group_uuid: str, user_uuid: str,
                   membership_type: Optional[str] = 'Member') -> bool:
@@ -471,19 +488,19 @@ class Client():
                 .join(Repository.imports)
                 .filter(Import.uuid == resource_uuid)
             )
-        elif resource_type == 'BFU':
+        elif resource_type == 'Fileset':
             q = (
                 q.join(Grant.repository)
                 .join(Repository.imports)
-                .join(Import.bfus)
-                .filter(BFU.uuid == resource_uuid)
+                .join(Import.filesets)
+                .filter(Fileset.uuid == resource_uuid)
             )
         elif resource_type == 'Image':
             q = (
                 q.join(Grant.repository)
                 .join(Repository.imports)
-                .join(Import.bfus)
-                .join(BFU.images)
+                .join(Import.filesets)
+                .join(Fileset.images)
                 .filter(Image.uuid == resource_uuid)
             )
 
@@ -542,19 +559,19 @@ class Client():
             .all()
         ))
 
-    def list_bfus_in_import(self, uuid: str) -> List[SDict]:
-        '''List BFUs in given import.
+    def list_filesets_in_import(self, uuid: str) -> List[SDict]:
+        '''List Filesets in given import.
 
         Args:
             uuid: UUID of the import.
 
         Returns:
-            The list of BFUs in the import.
+            The list of Filesets in the import.
         '''
 
-        return to_jsonapi(bfus_schema.dump(
-            self.session.query(BFU)
-            .filter(BFU.import_uuid == uuid)
+        return to_jsonapi(filesets_schema.dump(
+            self.session.query(Fileset)
+            .filter(Fileset.import_uuid == uuid)
             .all()
         ))
 
@@ -574,35 +591,35 @@ class Client():
             .all()
         ))
 
-    def list_images_in_bfu(self, uuid: str) -> List[SDict]:
-        '''List images in given BFU.
+    def list_images_in_fileset(self, uuid: str) -> List[SDict]:
+        '''List images in given Fileset.
 
         Args:
-            uuid: UUID of the BFU.
+            uuid: UUID of the Fileset.
 
         Returns:
-            The list of images in the BFU.
+            The list of images in the Fileset.
         '''
 
         return to_jsonapi(images_schema.dump(
             self.session.query(Image)
-            .filter(Image.bfu_uuid == uuid)
+            .filter(Image.fileset_uuid == uuid)
             .all()
         ))
 
-    def list_keys_in_bfu(self, uuid: str) -> List[SDict]:
-        '''List keys in given BFU.
+    def list_keys_in_fileset(self, uuid: str) -> List[SDict]:
+        '''List keys in given Fileset.
 
         Args:
-            uuid: UUID of the BFU.
+            uuid: UUID of the Fileset.
 
         Returns:
-            The list of keys in the BFU.
+            The list of keys in the Fileset.
         '''
 
         return to_jsonapi(keys_schema.dump(
             self.session.query(Key)
-            .filter(Key.bfu_uuid == uuid)
+            .filter(Key.fileset_uuid == uuid)
             .all()
         ))
 
@@ -637,44 +654,44 @@ class Client():
         self.session.commit()
         return to_jsonapi(import_schema.dump(import_))
 
-    def update_bfu(self, uuid: str, name: Optional[str] = None,
-                   complete: Optional[bool] = None,
-                   images: Optional[List[SDict]] = None) -> SDict:
-        '''Update a BFU.
+    def update_fileset(self, uuid: str, name: Optional[str] = None,
+                       complete: Optional[bool] = None,
+                       images: Optional[List[SDict]] = None) -> SDict:
+        '''Update a Fileset.
 
         Args:
-            uuid: UUID of the BFU.
-            name: Updated name of the BFU. Default: `None` for no update.
-            complete: Updated completedness of the BFU. Default: `None` for no
-                update.
-            images: Updated list of images to register tio the BFU.
+            uuid: UUID of the Fileset.
+            name: Updated name of the Fileset. Default: `None` for no update.
+            complete: Updated completedness of the Fileset. Default: `None`
+                for no update.
+            images: Updated list of images to register to the Fileset.
 
         Returns:
-            The updated BFU.
+            The updated Fileset.
         '''
 
-        bfu = (
-            self.session.query(BFU)
-            .filter(BFU.uuid == uuid)
+        fileset = (
+            self.session.query(Fileset)
+            .filter(Fileset.uuid == uuid)
             .one()
         )
 
         if name is not None:
-            bfu.name = name
+            fileset.name = name
 
         if complete is not None:
-            bfu.complete = complete
+            fileset.complete = complete
 
         if images is not None:
-            if bfu.complete is False:
+            if fileset.complete is False:
                 raise DBError('Images can only be registered to a completed '
-                              'BFU.')
-            images = [Image(**image, bfu=bfu) for image in images]
+                              'Fileset.')
+            images = [Image(**image, fileset=fileset) for image in images]
             self.session.add_all(images)
 
-        self.session.add(bfu)
+        self.session.add(fileset)
         self.session.commit()
-        return to_jsonapi(bfu_schema.dump(bfu))
+        return to_jsonapi(fileset_schema.dump(fileset))
 
     def update_repository(self, uuid: str, name: Optional[str] = None,
                           raw_storage: Optional[str] = None) -> SDict:
@@ -732,6 +749,10 @@ class Client():
             self.session.query(Membership)
             .filter(Membership.group_uuid == group_uuid)
             .filter(Membership.user_uuid == user_uuid)
+            .options(
+                joinedload(Membership.group),
+                joinedload(Membership.user)
+            )
             .one()
         )
 
@@ -740,7 +761,13 @@ class Client():
 
         self.session.add(membership)
         self.session.commit()
-        return to_jsonapi(membership_schema.dump(membership))
+        return to_jsonapi(
+            membership_schema.dump(membership),
+            {
+                'groups': [group_schema.dump(membership.group)],
+                'users': [user_schema.dump(membership.user)]
+            }
+        )
 
     def delete_repository(self, uuid: str):
         '''Delete a repository and all contents.

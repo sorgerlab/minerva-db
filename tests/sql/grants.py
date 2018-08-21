@@ -1,6 +1,6 @@
 import pytest
 from minerva_db.sql.api.utils import to_jsonapi
-from . import sa_obj_to_dict
+from . import sa_obj_to_dict, statement_log
 
 
 @pytest.mark.parametrize('fixture_name', ['user_granted_read_hierarchy',
@@ -55,25 +55,28 @@ class TestGrants():
                                          'Read')
         assert False is decision
 
-    def test_bfu(self, client, fixture_name, request):
+    def test_fileset(self, client, fixture_name, request):
         hierarchy = request.getfuncargvalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
-        bfu_uuid = hierarchy['bfu'].uuid
-        decision = client.has_permission(user_uuid, 'BFU', bfu_uuid, 'Read')
+        fileset_uuid = hierarchy['fileset'].uuid
+        decision = client.has_permission(user_uuid, 'Fileset', fileset_uuid,
+                                         'Read')
         assert True is decision
 
-    def test_bfu_insufficent(self, client, fixture_name, request):
+    def test_fileset_insufficent(self, client, fixture_name, request):
         hierarchy = request.getfuncargvalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
-        bfu_uuid = hierarchy['bfu'].uuid
-        decision = client.has_permission(user_uuid, 'BFU', bfu_uuid, 'Write')
+        fileset_uuid = hierarchy['fileset'].uuid
+        decision = client.has_permission(user_uuid, 'Fileset', fileset_uuid,
+                                         'Write')
         assert False is decision
 
-    def test_bfu_none(self, client, db_user, fixture_name, request):
+    def test_fileset_none(self, client, db_user, fixture_name, request):
         hierarchy = request.getfuncargvalue(fixture_name)
         user_uuid = db_user.uuid
-        bfu_uuid = hierarchy['bfu'].uuid
-        decision = client.has_permission(user_uuid, 'BFU', bfu_uuid, 'Read')
+        fileset_uuid = hierarchy['fileset'].uuid
+        decision = client.has_permission(user_uuid, 'Fileset', fileset_uuid,
+                                         'Read')
         assert False is decision
 
     def test_image(self, client, fixture_name, request):
@@ -152,3 +155,10 @@ class TestLists():
                 'repositories': []
             }
         ) == client.list_repositories_for_user(db_user.uuid, implied=True)
+
+    def test_list_repositories_for_user_query_count(self, connection, client,
+                                                    db_user):
+        user_uuid = db_user.uuid
+        with statement_log(connection) as statements:
+            client.list_repositories_for_user(user_uuid)
+            assert len(statements) == 1

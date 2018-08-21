@@ -1,6 +1,6 @@
 from factory import Factory, SubFactory, LazyAttribute, Sequence
-from minerva_db.sql.models import (User, Group, Repository, Import, Key, BFU,
-                                   Image, Grant, Membership)
+from minerva_db.sql.models import (User, Group, Repository, Import, Key,
+                                   Fileset, Image, Grant, Membership)
 
 
 class GroupFactory(Factory):
@@ -78,21 +78,23 @@ class KeyFactory(Factory):
     import_ = SubFactory(ImportFactory)
 
 
-class BFUFactory(Factory):
+class FilesetFactory(Factory):
 
     class Meta:
-        model = BFU
+        model = Fileset
 
     uuid = LazyAttribute(lambda o: o.name.lower().replace(' ', '_'))
-    name = Sequence(lambda n: f'bfu{n}')
+    name = Sequence(lambda n: f'fileset{n}')
     reader = 'reader'
+    reader_software = 'BioFormats'
+    reader_version = '1.0.0'
     complete = False
     import_ = SubFactory(ImportFactory)
 
 
-class KeyBFUFactory(KeyFactory):
+class KeyFilesetFactory(KeyFactory):
 
-    bfu = SubFactory(BFUFactory)
+    fileset = SubFactory(FilesetFactory)
 
 
 class ImageFactory(Factory):
@@ -103,4 +105,4 @@ class ImageFactory(Factory):
     uuid = LazyAttribute(lambda o: o.name.lower().replace(' ', '_'))
     name = Sequence(lambda n: f'image{n}')
     pyramid_levels = 1
-    bfu = SubFactory(BFUFactory)
+    fileset = SubFactory(FilesetFactory)

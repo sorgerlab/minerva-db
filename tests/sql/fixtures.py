@@ -6,7 +6,8 @@ from minerva_db.sql.models import Base
 from .factories import (GroupFactory, UserFactory, MembershipFactory,
                         MembershipOwnerFactory, RepositoryFactory,
                         GrantFactory, GrantAdminFactory, ImportFactory,
-                        BFUFactory, ImageFactory, KeyFactory, KeyBFUFactory)
+                        FilesetFactory, ImageFactory, KeyFactory,
+                        KeyFilesetFactory)
 
 
 @pytest.fixture(scope='session')
@@ -124,68 +125,32 @@ def statements(statements_base):
 
 
 @pytest.fixture
-def group():
-    return GroupFactory()
-
-
-@pytest.fixture
-def user():
-    return UserFactory()
-
-
-@pytest.fixture
-def ownership():
-    return MembershipOwnerFactory()
-
-
-@pytest.fixture
-def membership():
-    return MembershipFactory()
-
-
-@pytest.fixture
-def repository():
-    return RepositoryFactory()
-
-
-@pytest.fixture
-def import_():
-    return ImportFactory()
-
-
-@pytest.fixture
-def bfu():
-    return BFUFactory()
-
-
-@pytest.fixture
-def image():
-    return ImageFactory()
-
-
-@pytest.fixture
-def db_group(session, group):
+def db_group(session):
+    group = GroupFactory()
     session.add(group)
     session.commit()
     return group
 
 
 @pytest.fixture
-def db_user(session, user):
+def db_user(session):
+    user = UserFactory()
     session.add(user)
     session.commit()
     return user
 
 
 @pytest.fixture
-def db_membership(session, membership):
+def db_membership(session):
+    membership = MembershipFactory()
     session.add(membership)
     session.commit()
     return membership
 
 
 @pytest.fixture
-def db_ownership(session, ownership):
+def db_ownership(session):
+    ownership = MembershipOwnerFactory()
     session.add(ownership)
     session.commit()
     return ownership
@@ -200,21 +165,24 @@ def db_users(session):
 
 
 @pytest.fixture
-def db_repository(session, repository):
+def db_repository(session):
+    repository = RepositoryFactory()
     session.add(repository)
     session.commit()
     return repository
 
 
 @pytest.fixture
-def db_import(session, import_):
+def db_import(session):
+    import_ = ImportFactory()
     session.add(import_)
     session.commit()
     return import_
 
 
 @pytest.fixture
-def db_import_with_keys(session, import_):
+def db_import_with_keys(session):
+    import_ = ImportFactory()
     session.add(import_)
     keys = KeyFactory.create_batch(5, import_=import_)
     session.add_all(keys)
@@ -223,14 +191,16 @@ def db_import_with_keys(session, import_):
 
 
 @pytest.fixture
-def db_bfu(session, bfu):
-    session.add(bfu)
+def db_fileset(session):
+    fileset = FilesetFactory()
+    session.add(fileset)
     session.commit()
-    return bfu
+    return fileset
 
 
 @pytest.fixture
-def db_image(session, image):
+def db_image(session):
+    image = ImageFactory()
     session.add(image)
     session.commit()
     return image
@@ -259,11 +229,11 @@ def user_granted_read_hierarchy(session):
     repository = RepositoryFactory()
     grant = GrantFactory(subject=user, repository=repository)
     import_ = ImportFactory(repository=repository)
-    bfu = BFUFactory(import_=import_)
-    image = ImageFactory(bfu=bfu)
-    key = KeyBFUFactory(import_=import_, bfu=bfu)
+    fileset = FilesetFactory(import_=import_)
+    image = ImageFactory(fileset=fileset)
+    key = KeyFilesetFactory(import_=import_, fileset=fileset)
 
-    session.add_all([user, repository, grant, import_, bfu, key, image])
+    session.add_all([user, repository, grant, import_, fileset, key, image])
     session.commit()
     return {
         'user': user,
@@ -273,8 +243,8 @@ def user_granted_read_hierarchy(session):
         'grant': grant,
         'import_': import_,
         'import_uuid': import_.uuid,
-        'bfu': bfu,
-        'bfu_uuid': bfu.uuid,
+        'fileset': fileset,
+        'fileset_uuid': fileset.uuid,
         'key': key,
         'image': image,
         'image_uuid': image.uuid
@@ -290,12 +260,12 @@ def group_granted_read_hierarchy(session):
     repository = RepositoryFactory()
     grant = GrantFactory(subject=group, repository=repository)
     import_ = ImportFactory(repository=repository)
-    bfu = BFUFactory(import_=import_)
-    key = KeyBFUFactory(import_=import_, bfu=bfu)
-    image = ImageFactory(bfu=bfu)
+    fileset = FilesetFactory(import_=import_)
+    key = KeyFilesetFactory(import_=import_, fileset=fileset)
+    image = ImageFactory(fileset=fileset)
 
-    session.add_all([user, group, membership, repository, grant, import_, bfu,
-                     key, image])
+    session.add_all([user, group, membership, repository, grant, import_,
+                     fileset, key, image])
     session.commit()
     return {
         'user': user,
@@ -308,8 +278,8 @@ def group_granted_read_hierarchy(session):
         'grant': grant,
         'import_': import_,
         'import_uuid': import_.uuid,
-        'bfu': bfu,
-        'bfu_uuid': bfu.uuid,
+        'fileset': fileset,
+        'fileset_uuid': fileset.uuid,
         'key': key,
         'image': image,
         'image_uuid': image.uuid
