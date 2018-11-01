@@ -1,8 +1,8 @@
 """ Minerva Python Library
 """
 import os
-from configparser import ConfigParser
 from setuptools import setup, find_packages
+import versioneer
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 with open(os.path.join(HERE, 'README.md')) as f:
@@ -26,18 +26,7 @@ TEST_REQUIRES = [
     'factory_boy'
 ]
 
-
-def read_version():
-    """
-    Returns:
-        Version string of this module
-    """
-    config = ConfigParser()
-    config.read('setup.cfg')
-    return config.get('metadata', 'version')
-
-
-VERSION = read_version()
+VERSION = versioneer.get_version()
 DESCRIPTION = 'minerva DB'
 AUTHOR = 'D.P.W. Russell'
 EMAIL = 'douglas_russell@hms.harvard.edu'
@@ -47,6 +36,7 @@ HOMEPAGE = 'https://github.com/sorgerlab/minerva-db'
 setup(
     name='minerva-db',
     version=VERSION,
+    cmdclass=versioneer.get_cmdclass(),
     package_dir={'': 'src'},
     description=DESCRIPTION,
     long_description=README,
@@ -69,7 +59,7 @@ setup(
     author_email=EMAIL,
     license=LICENSE,
     url=HOMEPAGE,
-    download_url='%s/archive/v%s.tar.gz' % (HOMEPAGE, VERSION),
+    download_url=f'{HOMEPAGE}/archive/v{VERSION}.tar.gz',
     keywords=['minerva', 'database', 'library', 'microscopy'],
     zip_safe=False
 )
