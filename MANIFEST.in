@@ -1,1 +1,3 @@
 include src/minerva_db/sparql/schema/*.rq
+include versioneer.py
+include src/minerva_db/_version.py
