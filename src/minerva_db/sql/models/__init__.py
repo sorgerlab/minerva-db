@@ -11,6 +11,8 @@ from .import_ import Import
 from .fileset import Fileset
 from .image import Image
 from .key import Key
+from .renderingsettings import RenderingSettings, ChannelGroup, Channel
+
 
 # class Obj(Base):
 #     ''' Generic object for use in permissions and other generic object
@@ -33,5 +35,5 @@ SubjectWithPolymorphic = with_polymorphic(Subject, [User, Group], flat=True)
 
 
 __all__ = ['Base', 'Membership', 'Grant', 'Subject', 'Group', 'User',
-           'Repository', 'Import', 'Fileset', 'Image', 'Key',
+           'Repository', 'Import', 'Fileset', 'Image', 'Key', 'RenderingSettings',
            'SubjectWithPolymorphic']
