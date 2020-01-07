@@ -1,17 +1,22 @@
 import pytest
 from sqlalchemy.orm import Session
 from sqlalchemy import event, create_engine
-from minerva_db.sql.api import Client
-from minerva_db.sql.models import Base
+from src.minerva_db.sql.api import Client
+from src.minerva_db.sql.models import Base
 from .factories import (GroupFactory, UserFactory, MembershipFactory,
                         MembershipOwnerFactory, RepositoryFactory,
                         GrantFactory, GrantAdminFactory, ImportFactory,
                         FilesetFactory, ImageFactory, KeyFactory,
-                        KeyFilesetFactory)
+                        KeyFilesetFactory, RenderingSettingsFactory)
 
+USE_DOCKER = False
 
 @pytest.fixture(scope='session')
 def postgres():
+    if not USE_DOCKER:
+        yield f'postgresql://postgres:postgres@localhost:5432/postgres'
+        return
+        
     import docker
     import time
 
@@ -205,6 +210,12 @@ def db_image(session):
     session.commit()
     return image
 
+@pytest.fixture
+def db_rendering_settings(session):
+    rendering_settings = RenderingSettingsFactory()
+    session.add(rendering_settings)
+    session.commit()
+    return rendering_settings
 
 @pytest.fixture
 def user_granted_repository(session):

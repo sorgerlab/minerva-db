@@ -1,5 +1,5 @@
 import pytest
-from minerva_db.sql.api.utils import to_jsonapi
+from src.minerva_db.sql.api.utils import to_jsonapi
 from . import sa_obj_to_dict, statement_log
 
 
@@ -8,7 +8,7 @@ from . import sa_obj_to_dict, statement_log
 class TestGrants():
 
     def test_repository(self, client, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
         repository_uuid = hierarchy['repository'].uuid
         decision = client.has_permission(user_uuid, 'Repository',
@@ -16,7 +16,7 @@ class TestGrants():
         assert True is decision
 
     def test_repository_insufficent(self, client, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
         repository_uuid = hierarchy['repository'].uuid
         decision = client.has_permission(user_uuid, 'Repository',
@@ -24,7 +24,7 @@ class TestGrants():
         assert False is decision
 
     def test_repository_none(self, client, db_user, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = db_user.uuid
         repository_uuid = hierarchy['repository'].uuid
         decision = client.has_permission(user_uuid, 'Repository',
@@ -32,7 +32,7 @@ class TestGrants():
         assert False is decision
 
     def test_import(self, client, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
         import_uuid = hierarchy['import_'].uuid
         decision = client.has_permission(user_uuid, 'Import', import_uuid,
@@ -40,7 +40,7 @@ class TestGrants():
         assert True is decision
 
     def test_import_insufficent(self, client, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
         import_uuid = hierarchy['import_'].uuid
         decision = client.has_permission(user_uuid, 'Import', import_uuid,
@@ -48,7 +48,7 @@ class TestGrants():
         assert False is decision
 
     def test_import_none(self, client, db_user, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = db_user.uuid
         import_uuid = hierarchy['import_'].uuid
         decision = client.has_permission(user_uuid, 'Import', import_uuid,
@@ -56,7 +56,7 @@ class TestGrants():
         assert False is decision
 
     def test_fileset(self, client, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
         fileset_uuid = hierarchy['fileset'].uuid
         decision = client.has_permission(user_uuid, 'Fileset', fileset_uuid,
@@ -64,7 +64,7 @@ class TestGrants():
         assert True is decision
 
     def test_fileset_insufficent(self, client, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
         fileset_uuid = hierarchy['fileset'].uuid
         decision = client.has_permission(user_uuid, 'Fileset', fileset_uuid,
@@ -72,7 +72,7 @@ class TestGrants():
         assert False is decision
 
     def test_fileset_none(self, client, db_user, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = db_user.uuid
         fileset_uuid = hierarchy['fileset'].uuid
         decision = client.has_permission(user_uuid, 'Fileset', fileset_uuid,
@@ -80,7 +80,7 @@ class TestGrants():
         assert False is decision
 
     def test_image(self, client, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
         image_uuid = hierarchy['image'].uuid
         decision = client.has_permission(user_uuid, 'Image', image_uuid,
@@ -88,7 +88,7 @@ class TestGrants():
         assert True is decision
 
     def test_image_insufficent(self, client, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = hierarchy['user'].uuid
         image_uuid = hierarchy['image'].uuid
         decision = client.has_permission(user_uuid, 'Image', image_uuid,
@@ -96,7 +96,7 @@ class TestGrants():
         assert False is decision
 
     def test_image_none(self, client, db_user, fixture_name, request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = db_user.uuid
         image_uuid = hierarchy['image'].uuid
         decision = client.has_permission(user_uuid, 'Image', image_uuid,
@@ -130,7 +130,7 @@ class TestLists():
                                               'group_granted_read_hierarchy'])
     def test_list_repositories_for_user_implied(self, client, fixture_name,
                                                 request):
-        hierarchy = request.getfuncargvalue(fixture_name)
+        hierarchy = request.getfixturevalue(fixture_name)
         grant_keys = ['subject_uuid', 'repository_uuid', 'permission']
         repository_keys = ['uuid', 'name', 'raw_storage']
         user_uuid = hierarchy['user_uuid']

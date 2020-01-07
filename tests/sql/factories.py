@@ -1,6 +1,6 @@
 from factory import Factory, SubFactory, LazyAttribute, Sequence
-from minerva_db.sql.models import (User, Group, Repository, Import, Key,
-                                   Fileset, Image, Grant, Membership)
+from src.minerva_db.sql.models import (User, Group, Repository, Import, Key,
+                                   Fileset, Image, Grant, Membership, RenderingSettings)
 
 
 class GroupFactory(Factory):
@@ -106,3 +106,28 @@ class ImageFactory(Factory):
     name = Sequence(lambda n: f'image{n}')
     pyramid_levels = 1
     fileset = SubFactory(FilesetFactory)
+
+
+class RenderingSettingsFactory(Factory):
+
+    class Meta:
+        model = RenderingSettings
+
+    uuid = LazyAttribute(lambda o: o.name.lower().replace(' ', '_'))
+    image = SubFactory(ImageFactory)
+    settings = """
+    { 
+        "channels": {
+            "1": { 
+                "color": "FF0000",
+                "min": 0,
+                "max": 1
+            },
+            "2": {
+                "color": "0000FF",
+                "min": 0.25,
+                "max": 0.66
+            }
+        } 
+    }
+    """

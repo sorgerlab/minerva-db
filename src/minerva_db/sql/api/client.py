@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
 from typing import Dict, List, Optional, Union
 from ..models import (User, Group, Membership, Repository, Import,
-                      Fileset, Image, Key, Grant)
+                      Fileset, Image, Key, Grant, RenderingSettings, ChannelGroup)
 from ..serializers import (user_schema, group_schema, repository_schema,
                            repositories_schema, import_schema, imports_schema,
                            keys_schema, fileset_schema, filesets_schema,
@@ -205,6 +205,13 @@ class Client():
         self.session.commit()
         return to_jsonapi(image_schema.dump(image))
 
+    def create_rendering_settings(self, uuid:str, image_uuid: str, channels: ChannelGroup):
+        image = self.session.query(Image).filter(Image.uuid == image_uuid).one()
+        rendering_settings = RenderingSettings(uuid, image, channels)
+        self.session.add(rendering_settings)
+        self.session.commit()
+        return
+
     def add_keys_to_import(self, keys: List[str], import_uuid: str) -> SDict:
         '''Create keys within the specified import.
 
@@ -314,6 +321,11 @@ class Client():
             .filter(Image.uuid == uuid)
             .one()
         ))
+
+    def get_image_channel_group(self, uuid: str):
+        rendering_setting = self.session.query(RenderingSettings) \
+            .filter(RenderingSettings.uuid == uuid).one()
+        return rendering_setting.get_channel_group()
 
     def get_import(self, uuid: str) -> SDict:
         '''Get details of the specified import.
@@ -622,6 +634,14 @@ class Client():
             .filter(Key.fileset_uuid == uuid)
             .all()
         ))
+
+    def list_image_channel_groups(self, image_uuid: str):
+        rendering_settings = self.session.query(RenderingSettings) \
+            .filter(RenderingSettings.image_uuid == image_uuid).all()
+        channel_groups = []
+        for setting in rendering_settings:
+            channel_groups.append(setting.get_channel_group())
+        return channel_groups
 
     def update_import(self, uuid: str, name: Optional[str] = None,
                       complete: Optional[bool] = None) -> SDict:

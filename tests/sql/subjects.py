@@ -1,8 +1,8 @@
 import pytest
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
-from minerva_db.sql.models import User, Group, Membership
-from minerva_db.sql.api.utils import to_jsonapi
+from src.minerva_db.sql.models import User, Group, Membership
+from src.minerva_db.sql.api.utils import to_jsonapi
 from .factories import GroupFactory, UserFactory, MembershipFactory
 from . import sa_obj_to_dict, statement_log
 

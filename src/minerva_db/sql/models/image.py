@@ -11,6 +11,8 @@ class Image(Base):
     fileset_uuid = Column(String(36), ForeignKey(Fileset.uuid), nullable=False)
 
     fileset = relationship('Fileset', back_populates='images')
+    rendering_settings = relationship('RenderingSettings', back_populates='image',
+                          cascade='all, delete-orphan')
 
     def __init__(self, uuid, name, pyramid_levels, fileset):
         self.uuid = uuid

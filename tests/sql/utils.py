@@ -1,4 +1,4 @@
-from minerva_db.sql.api.utils import to_jsonapi
+from src.minerva_db.sql.api.utils import to_jsonapi
 
 
 class TestUtils():
