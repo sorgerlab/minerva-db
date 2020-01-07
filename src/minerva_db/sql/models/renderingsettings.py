@@ -30,7 +30,7 @@ class ChannelGroup:
         self.channels = {}
 
     def add(self, channel:Channel):
-        self.channels[channel.name] = channel
+        self.channels[channel.index] = channel
 
 
 class RenderingSettings(Base):

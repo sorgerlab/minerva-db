@@ -440,10 +440,10 @@ class TestRenderingSettings:
         channel_groups = sorted(channel_groups, key=lambda x: x.name)
         assert channel_groups[0].name == "Lymphocytes"
         assert len(channel_groups[0].channels) == 2
-        assert channel_groups[0].channels["CD3D"].name == "CD3D"
-        assert channel_groups[0].channels["CD3D"].color == "0000FF"
-        assert channel_groups[0].channels["CD3D"].min == 0.2
-        assert channel_groups[0].channels["CD3D"].max == 0.5
+        assert channel_groups[0].channels["1"].name == "CD3D"
+        assert channel_groups[0].channels["1"].color == "0000FF"
+        assert channel_groups[0].channels["1"].min == 0.2
+        assert channel_groups[0].channels["1"].max == 0.5
 
         assert channel_groups[1].name == "Macrophages"
         assert len(channel_groups[1].channels) == 3
