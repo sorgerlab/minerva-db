@@ -324,7 +324,7 @@ class Client():
 
     def get_image_channel_group(self, uuid: str):
         rendering_setting = self.session.query(RenderingSettings) \
-            .filter(RenderingSettings.uuid == uuid).one()
+            .filter(RenderingSettings.uuid == str(uuid)).one()
         return rendering_setting.get_channel_group()
 
     def get_import(self, uuid: str) -> SDict:

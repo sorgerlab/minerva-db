@@ -448,6 +448,17 @@ class TestRenderingSettings:
         assert channel_groups[1].name == "Macrophages"
         assert len(channel_groups[1].channels) == 3
 
+    def test_get_channel_group(self, client, db_image):
+        settings = ChannelGroup("Macrophages")
+        settings.add(Channel("1", "DNA", "0000FF", 0.2, 0.5))
+        settings.add(Channel("2", "CD4", "00FF00", 0, 1))
+
+        cg_uuid = uuid.uuid4()
+        client.create_rendering_settings(cg_uuid, db_image.uuid, settings)
+
+        channel_group = client.get_image_channel_group(str(cg_uuid))
+        assert len(channel_group.channels) == 2
+
 
 
 
