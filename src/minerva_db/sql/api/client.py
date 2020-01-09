@@ -210,7 +210,11 @@ class Client():
         rendering_settings = RenderingSettings(uuid, image, channels)
         self.session.add(rendering_settings)
         self.session.commit()
-        return
+
+    def update_rendering_settings(self, uuid:str, channels: ChannelGroup):
+        rendering_settings = self.session.query(RenderingSettings).filter(RenderingSettings.uuid == uuid).one()
+        rendering_settings.channel_group = channels
+        self.session.commit()
 
     def add_keys_to_import(self, keys: List[str], import_uuid: str) -> SDict:
         '''Create keys within the specified import.
