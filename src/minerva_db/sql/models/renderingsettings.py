@@ -32,6 +32,12 @@ class ChannelGroup:
     def add(self, channel:Channel):
         self.channels[channel.index] = channel
 
+    def as_dict(self):
+        obj = {"channels": {}}
+        for key, channel in self.channels.items():
+            obj["channels"][channel.index] = channel.as_dict()
+        return obj
+
 
 class RenderingSettings(Base):
     uuid = Column(String(36), primary_key=True)

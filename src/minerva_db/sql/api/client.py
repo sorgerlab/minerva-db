@@ -212,8 +212,8 @@ class Client():
         self.session.commit()
 
     def update_rendering_settings(self, uuid:str, channels: ChannelGroup):
-        rendering_settings = self.session.query(RenderingSettings).filter(RenderingSettings.uuid == uuid).one()
-        rendering_settings.channel_group = channels
+        rendering_settings = self.session.query(RenderingSettings).filter(RenderingSettings.uuid == str(uuid)).one()
+        rendering_settings.channel_group = channels.as_dict()
         self.session.commit()
 
     def add_keys_to_import(self, keys: List[str], import_uuid: str) -> SDict:

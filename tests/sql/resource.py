@@ -421,6 +421,24 @@ class TestRenderingSettings:
         assert res[0].channel_group["channels"]["2"]["min"] == 0
         assert res[0].channel_group["channels"]["2"]["max"] == 1
 
+    def test_update_rendering_settings(self, client, session, db_image):
+        settings = ChannelGroup("Macrophages")
+        settings.add(Channel("1", "DNA", "0000FF", 0.2, 0.5))
+        settings.add(Channel("2", "CD4", "00FF00", 0, 1))
+        cg_uuid = uuid.uuid4()
+        client.create_rendering_settings(cg_uuid, db_image.uuid, settings)
+
+        settings.add(Channel("3", "NEW", "FFFFFF", 0.3, 0.7))
+        settings.channels["1"].min = 0.15
+        settings.channels["1"].max = 0.99
+        client.update_rendering_settings(cg_uuid, settings)
+
+        res = session.query(RenderingSettings.channel_group).filter(RenderingSettings.image_uuid == db_image.uuid).all()
+        assert len(res[0].channel_group["channels"]) == 3
+        assert res[0].channel_group["channels"]["1"]["min"] == 0.15
+        assert res[0].channel_group["channels"]["1"]["max"] == 0.99
+
+
     def test_get_rendering_settings(self, client, db_image):
         settings = ChannelGroup("Macrophages")
         settings.add(Channel("1", "DNA", "0000FF", 0.2, 0.5))
