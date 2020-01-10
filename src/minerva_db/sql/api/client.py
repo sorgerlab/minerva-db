@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
 from typing import Dict, List, Optional, Union
 from ..models import (User, Group, Membership, Repository, Import,
-                      Fileset, Image, Key, Grant, RenderingSettings, ChannelGroup)
+                      Fileset, Image, Key, Grant, RenderingSettings)
 from ..serializers import (user_schema, group_schema, repository_schema,
                            repositories_schema, import_schema, imports_schema,
                            keys_schema, fileset_schema, filesets_schema,
@@ -205,15 +205,16 @@ class Client():
         self.session.commit()
         return to_jsonapi(image_schema.dump(image))
 
-    def create_rendering_settings(self, uuid:str, image_uuid: str, channels: ChannelGroup):
+    def create_rendering_settings(self, uuid:str, image_uuid: str, channels, label=None):
         image = self.session.query(Image).filter(Image.uuid == image_uuid).one()
-        rendering_settings = RenderingSettings(uuid, image, channels)
+        rendering_settings = RenderingSettings(uuid, image, channels, label)
         self.session.add(rendering_settings)
         self.session.commit()
 
-    def update_rendering_settings(self, uuid:str, channels: ChannelGroup):
+    def update_rendering_settings(self, uuid:str, channels, label=None):
         rendering_settings = self.session.query(RenderingSettings).filter(RenderingSettings.uuid == str(uuid)).one()
-        rendering_settings.channel_group = channels.as_dict()
+        rendering_settings.label = label
+        rendering_settings.channels = channels
         self.session.commit()
 
     def add_keys_to_import(self, keys: List[str], import_uuid: str) -> SDict:
@@ -329,7 +330,7 @@ class Client():
     def get_image_channel_group(self, uuid: str):
         rendering_setting = self.session.query(RenderingSettings) \
             .filter(RenderingSettings.uuid == str(uuid)).one()
-        return rendering_setting.get_channel_group()
+        return rendering_setting
 
     def get_import(self, uuid: str) -> SDict:
         '''Get details of the specified import.
@@ -639,12 +640,12 @@ class Client():
             .all()
         ))
 
-    def list_image_channel_groups(self, image_uuid: str):
+    def list_rendering_settings(self, image_uuid: str):
         rendering_settings = self.session.query(RenderingSettings) \
             .filter(RenderingSettings.image_uuid == image_uuid).all()
         channel_groups = []
         for setting in rendering_settings:
-            channel_groups.append(setting.get_channel_group())
+            channel_groups.append(setting)
         return channel_groups
 
     def update_import(self, uuid: str, name: Optional[str] = None,

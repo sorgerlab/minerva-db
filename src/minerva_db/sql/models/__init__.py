@@ -11,7 +11,7 @@ from .import_ import Import
 from .fileset import Fileset
 from .image import Image
 from .key import Key
-from .renderingsettings import RenderingSettings, ChannelGroup, Channel
+from .renderingsettings import RenderingSettings, Channel
 
 
 # class Obj(Base):

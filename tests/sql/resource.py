@@ -4,7 +4,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from src.minerva_db.sql.api import DBError
 from src.minerva_db.sql.api.utils import to_jsonapi
 from src.minerva_db.sql.models import (Repository, Import, Fileset, Image, Key,
-                                       User, Grant, RenderingSettings, ChannelGroup, Channel)
+                                       User, Grant, RenderingSettings, Channel)
 from .factories import (RepositoryFactory, ImportFactory, FilesetFactory,
                         ImageFactory, KeyFactory)
 from . import sa_obj_to_dict, statement_log
@@ -406,73 +406,76 @@ class TestImage():
 class TestRenderingSettings:
 
     def test_create_rendering_settings(self, client, session, db_image):
-        settings = ChannelGroup("Macrophages")
-        settings.add(Channel("1", "DNA", "0000FF", 0.2, 0.5))
-        settings.add(Channel("2", "CD4", "00FF00", 0, 1))
+        channel1 = Channel("1", "DNA", "0000FF", 0.2, 0.5)
+        channel2 = Channel("2", "CD4", "00FF00", 0, 1)
+        channels = [channel1.as_dict(), channel2.as_dict()]
+        client.create_rendering_settings(uuid.uuid4(), db_image.uuid, channels, "Macrophages")
 
-        client.create_rendering_settings(uuid.uuid4(), db_image.uuid, settings)
-        res = session.query(RenderingSettings.channel_group).filter(RenderingSettings.image_uuid == db_image.uuid).all()
+        res = session.query(RenderingSettings).filter(RenderingSettings.image_uuid == db_image.uuid).all()
         assert len(res) == 1
-        assert res[0].channel_group["channels"]["1"]["color"] == "0000FF"
-        assert res[0].channel_group["channels"]["1"]["min"] == 0.2
-        assert res[0].channel_group["channels"]["1"]["max"] == 0.5
+        assert res[0].channels[0]["color"] == "0000FF"
+        assert res[0].channels[0]["min"] == 0.2
+        assert res[0].channels[0]["max"] == 0.5
 
-        assert res[0].channel_group["channels"]["2"]["color"] == "00FF00"
-        assert res[0].channel_group["channels"]["2"]["min"] == 0
-        assert res[0].channel_group["channels"]["2"]["max"] == 1
+        assert res[0].channels[1]["color"] == "00FF00"
+        assert res[0].channels[1]["min"] == 0
+        assert res[0].channels[1]["max"] == 1
 
     def test_update_rendering_settings(self, client, session, db_image):
-        settings = ChannelGroup("Macrophages")
-        settings.add(Channel("1", "DNA", "0000FF", 0.2, 0.5))
-        settings.add(Channel("2", "CD4", "00FF00", 0, 1))
+        channel1 = Channel("1", "DNA", "0000FF", 0.2, 0.5)
+        channel2 = Channel("2", "CD4", "00FF00", 0, 1)
+        channels = [channel1.as_dict(), channel2.as_dict()]
         cg_uuid = uuid.uuid4()
-        client.create_rendering_settings(cg_uuid, db_image.uuid, settings)
+        client.create_rendering_settings(cg_uuid, db_image.uuid, channels, "Macrophages")
 
-        settings.add(Channel("3", "NEW", "FFFFFF", 0.3, 0.7))
-        settings.channels["1"].min = 0.15
-        settings.channels["1"].max = 0.99
-        client.update_rendering_settings(cg_uuid, settings)
+        channels.append(Channel("3", "NEW", "FFFFFF", 0.3, 0.7).as_dict())
+        channels[0]["min"] = 0.15
+        channels[0]["max"] = 0.99
+        client.update_rendering_settings(cg_uuid, channels, "Macrophages")
 
-        res = session.query(RenderingSettings.channel_group).filter(RenderingSettings.image_uuid == db_image.uuid).all()
-        assert len(res[0].channel_group["channels"]) == 3
-        assert res[0].channel_group["channels"]["1"]["min"] == 0.15
-        assert res[0].channel_group["channels"]["1"]["max"] == 0.99
+        res = session.query(RenderingSettings).filter(RenderingSettings.image_uuid == db_image.uuid).all()
+        assert len(res[0].channels) == 3
+        assert res[0].channels[0]["min"] == 0.15
+        assert res[0].channels[0]["max"] == 0.99
 
 
     def test_get_rendering_settings(self, client, db_image):
-        settings = ChannelGroup("Macrophages")
-        settings.add(Channel("1", "DNA", "0000FF", 0.2, 0.5))
-        settings.add(Channel("2", "CD163", "FF0000", 0, 1))
-        settings.add(Channel("3", "IBA1", "00FF00", 0.5, 0.8))
+        channels1 = [
+            Channel("1", "DNA", "0000FF", 0.2, 0.5).as_dict(),
+            Channel("2", "CD163", "FF0000", 0, 1).as_dict(),
+            Channel("3", "IBA1", "00FF00", 0.5, 0.8).as_dict()
+        ]
 
-        client.create_rendering_settings(uuid.uuid4(), db_image.uuid, settings)
+        client.create_rendering_settings(uuid.uuid4(), db_image.uuid, channels1, "Macrophages")
 
-        settings = ChannelGroup("Lymphocytes")
-        settings.add(Channel("1", "CD3D", "0000FF", 0.2, 0.5))
-        settings.add(Channel("2", "CD20", "00FF00", 0, 1))
+        channels2 = [
+            Channel("1", "CD3D", "0000FF", 0.2, 0.5).as_dict(),
+            Channel("2", "CD20", "00FF00", 0, 1).as_dict()
+        ]
 
-        client.create_rendering_settings(uuid.uuid4(), db_image.uuid, settings)
+        client.create_rendering_settings(uuid.uuid4(), db_image.uuid, channels2, "Lymphocytes")
 
-        channel_groups = client.list_image_channel_groups(db_image.uuid)
-        assert len(channel_groups) == 2
-        channel_groups = sorted(channel_groups, key=lambda x: x.name)
-        assert channel_groups[0].name == "Lymphocytes"
-        assert len(channel_groups[0].channels) == 2
-        assert channel_groups[0].channels["1"].name == "CD3D"
-        assert channel_groups[0].channels["1"].color == "0000FF"
-        assert channel_groups[0].channels["1"].min == 0.2
-        assert channel_groups[0].channels["1"].max == 0.5
+        rendering_settings = client.list_rendering_settings(db_image.uuid)
+        assert len(rendering_settings) == 2
+        rendering_settings = sorted(rendering_settings, key=lambda x: x.label)
+        assert rendering_settings[0].label == "Lymphocytes"
+        assert len(rendering_settings[0].channels) == 2
+        assert rendering_settings[0].channels[1]["label"] == "CD20"
+        assert rendering_settings[0].channels[1]["color"] == "00FF00"
+        assert rendering_settings[0].channels[1]["min"] == 0
+        assert rendering_settings[0].channels[1]["max"] == 1
 
-        assert channel_groups[1].name == "Macrophages"
-        assert len(channel_groups[1].channels) == 3
+        assert rendering_settings[1].label == "Macrophages"
+        assert len(rendering_settings[1].channels) == 3
 
     def test_get_channel_group(self, client, db_image):
-        settings = ChannelGroup("Macrophages")
-        settings.add(Channel("1", "DNA", "0000FF", 0.2, 0.5))
-        settings.add(Channel("2", "CD4", "00FF00", 0, 1))
+        channels = [
+            Channel("1", "DNA", "0000FF", 0.2, 0.5).as_dict(),
+            Channel("2", "CD4", "FF0000", 0, 1).as_dict()
+        ]
 
         cg_uuid = uuid.uuid4()
-        client.create_rendering_settings(cg_uuid, db_image.uuid, settings)
+        client.create_rendering_settings(cg_uuid, db_image.uuid, channels, "1")
 
         channel_group = client.get_image_channel_group(str(cg_uuid))
         assert len(channel_group.channels) == 2
