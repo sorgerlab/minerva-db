@@ -681,7 +681,8 @@ class Client():
 
     def update_fileset(self, uuid: str, name: Optional[str] = None,
                        complete: Optional[bool] = None,
-                       images: Optional[List[SDict]] = None) -> SDict:
+                       images: Optional[List[SDict]] = None,
+                       progress: Optional[int] = 0) -> SDict:
         '''Update a Fileset.
 
         Args:
@@ -690,6 +691,7 @@ class Client():
             complete: Updated completedness of the Fileset. Default: `None`
                 for no update.
             images: Updated list of images to register to the Fileset.
+            progress: Progress of the fileset import (0-100)
 
         Returns:
             The updated Fileset.
@@ -706,6 +708,9 @@ class Client():
 
         if complete is not None:
             fileset.complete = complete
+
+        if progress is not None:
+            fileset.progress = progress
 
         if images is not None:
             if fileset.complete is False:

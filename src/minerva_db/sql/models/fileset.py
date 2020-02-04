@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, String, Boolean
+from sqlalchemy import Column, ForeignKey, String, Boolean, Integer
 from sqlalchemy.orm import relationship
 from .base import Base
 from .import_ import Import
@@ -12,6 +12,7 @@ class Fileset(Base):
     reader_version = Column(String(256), nullable=False)
     complete = Column(Boolean, nullable=False)
     import_uuid = Column(String(36), ForeignKey(Import.uuid), nullable=False)
+    progress = Column(Integer, nullable=True)
 
     import_ = relationship('Import', back_populates='filesets')
     keys = relationship('Key', back_populates='fileset')
@@ -19,7 +20,7 @@ class Fileset(Base):
                           cascade='all, delete-orphan')
 
     def __init__(self, uuid, name, reader, reader_software, reader_version,
-                 import_, complete=False):
+                 import_, complete=False, progress=0):
         self.uuid = uuid
         self.name = name
         self.reader = reader
@@ -27,3 +28,4 @@ class Fileset(Base):
         self.reader_version = reader_version
         self.complete = complete
         self.import_ = import_
+        self.progress = progress
