@@ -11,7 +11,7 @@ from . import sa_obj_to_dict, statement_log
 import uuid
 
 
-class TestRepository():
+class TestRepository:
 
     def test_create_repository(self, client, session, db_user):
         keys = ('uuid', 'name', 'raw_storage')
@@ -195,12 +195,18 @@ class TestImport():
         d['complete'] = True
         assert to_jsonapi(d) == import_
 
+    def test_list_incomplete_imports(self, client, db_fileset_incomplete):
+        imports = client.list_incomplete_imports()
+        print(imports)
+        assert len(imports["data"]) == 1
+        assert len(imports["included"]) == 1
+
 
 class TestFileset():
 
     def test_create_fileset(self, client, session, db_import_with_keys):
         db_keys = [key.key for key in db_import_with_keys.keys[:2]]
-        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version' ,'progress')
         fileset = FilesetFactory()
         create_d = sa_obj_to_dict(fileset, keys)
         keys += ('complete',)
@@ -247,7 +253,7 @@ class TestFileset():
     def test_create_fileset_with_duplicate_key_in_different_imports(self,
                                                                     client,
                                                                     session):
-        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version')
+        keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version', 'progress')
         import1 = ImportFactory()
         import2 = ImportFactory()
         key1 = KeyFactory(import_=import1, key='key')
@@ -264,7 +270,7 @@ class TestFileset():
 
     def test_get_fileset(self, client, db_fileset):
         keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version',
-                'complete', 'import_uuid')
+                'complete', 'import_uuid', 'progress')
         d = sa_obj_to_dict(db_fileset, keys)
         assert to_jsonapi(d) == client.get_fileset(db_fileset.uuid)
 
@@ -281,7 +287,7 @@ class TestFileset():
     def test_list_filesets_in_import(self, client,
                                      user_granted_read_hierarchy):
         keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version',
-                'complete', 'import_uuid')
+                'complete', 'import_uuid', 'progress')
         d = sa_obj_to_dict(user_granted_read_hierarchy['fileset'], keys)
         assert to_jsonapi([d]) == client.list_filesets_in_import(
             user_granted_read_hierarchy['import_uuid']
@@ -312,7 +318,7 @@ class TestFileset():
 
     def test_update_fileset_complete(self, client, db_fileset):
         keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version',
-                'complete', 'import_uuid')
+                'complete', 'import_uuid', 'progress')
         d = sa_obj_to_dict(db_fileset, keys)
         d['complete'] = True
         assert to_jsonapi(d) == client.update_fileset(db_fileset.uuid,
@@ -320,7 +326,7 @@ class TestFileset():
 
     def test_update_fileset_complete_with_images(self, client, db_fileset):
         keys = ('uuid', 'name', 'reader', 'reader_software', 'reader_version',
-                'complete', 'import_uuid')
+                'complete', 'import_uuid', 'progress')
         d = sa_obj_to_dict(db_fileset, keys)
         d_image = sa_obj_to_dict(ImageFactory(), ['uuid', 'name',
                                                   'pyramid_levels'])
@@ -437,7 +443,6 @@ class TestRenderingSettings:
         assert len(res[0].channels) == 3
         assert res[0].channels[0]["min"] == 0.15
         assert res[0].channels[0]["max"] == 0.99
-
 
     def test_get_rendering_settings(self, client, db_image):
         channels1 = [

@@ -144,7 +144,7 @@ class Client():
 
     def create_fileset(self, uuid: str, name: str, reader: str,
                        reader_software: str, reader_version: str,
-                       keys: List[str], import_uuid: str) -> SDict:
+                       keys: List[str], import_uuid: str, progress=0) -> SDict:
         '''Create a fileset within the specified import.
 
         Associates the given files.
@@ -158,6 +158,7 @@ class Client():
             keys: Keys of the associated files, the first entry is
                 the entrypoint.
             import_uuid: UUID of the import.
+            progress: Progress of importing the fileset
 
         Returns:
             The newly created Fileset.
@@ -167,7 +168,7 @@ class Client():
             .filter(Import.uuid == import_uuid) \
             .one()
         fileset = Fileset(uuid, name, reader, reader_software, reader_version,
-                          import_)
+                          import_, progress)
         s3_keys = self.session.query(Key) \
             .filter(Key.import_uuid == import_uuid) \
             .filter(Key.key.in_(keys)) \
@@ -640,12 +641,28 @@ class Client():
             .all()
         ))
 
-    def list_incomplete_filesets(self) -> List[SDict]:
-        return to_jsonapi(filesets_schema.dump(
-            self.session.query(Fileset)
-            .filter(Fileset.complete is False)
+    def list_incomplete_imports(self) -> List[SDict]:
+
+        results = self.session.query(Import, Fileset).outerjoin(Fileset) \
+            .filter(Fileset == None or Fileset.complete == False) \
             .all()
-        ))
+
+        imports = []
+        filesets = []
+        for result in results:
+            for entity in result:
+                if isinstance(entity, Import):
+                    imports.append(entity)
+                elif isinstance(entity, Fileset):
+                    filesets.append(entity)
+
+        return to_jsonapi(
+            grants_schema.dump(imports),
+            {
+                'filesets': filesets_schema.dump(filesets)
+            }
+        )
+
 
     def list_rendering_settings(self, image_uuid: str):
         rendering_settings = self.session.query(RenderingSettings) \

@@ -202,6 +202,14 @@ def db_fileset(session):
     session.commit()
     return fileset
 
+@pytest.fixture
+def db_fileset_incomplete(session):
+    fileset = FilesetFactory()
+    fileset.complete = False
+    fileset.progress = 50
+    session.add(fileset)
+    session.commit()
+    return fileset
 
 @pytest.fixture
 def db_image(session):
