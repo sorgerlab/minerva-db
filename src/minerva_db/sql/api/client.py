@@ -640,6 +640,13 @@ class Client():
             .all()
         ))
 
+    def list_incomplete_filesets(self) -> List[SDict]:
+        return to_jsonapi(filesets_schema.dump(
+            self.session.query(Fileset)
+            .filter(Fileset.complete is False)
+            .all()
+        ))
+
     def list_rendering_settings(self, image_uuid: str):
         rendering_settings = self.session.query(RenderingSettings) \
             .filter(RenderingSettings.image_uuid == image_uuid).all()
