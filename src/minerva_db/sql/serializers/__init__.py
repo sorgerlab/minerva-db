@@ -8,6 +8,7 @@ from .import_ import ImportSchema, import_schema, imports_schema
 from .fileset import FilesetSchema, fileset_schema, filesets_schema
 from .image import ImageSchema, image_schema, images_schema
 from .key import KeySchema, key_schema, keys_schema
+from .renderingsettings import RenderingSettingsSchema, rendering_settings_schema
 
 
 __all__ = [
@@ -19,5 +20,5 @@ __all__ = [
     'ImportSchema', 'import_schema', 'imports_schema',
     'FilesetSchema', 'fileset_schema', 'filesets_schema',
     'ImageSchema', 'image_schema', 'images_schema',
-    'KeySchema', 'key_schema', 'keys_schema'
+    'KeySchema', 'key_schema', 'keys_schema', 'rendering_settings_schema'
 ]

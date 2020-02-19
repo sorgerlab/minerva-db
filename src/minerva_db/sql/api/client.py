@@ -6,7 +6,7 @@ from ..serializers import (user_schema, group_schema, repository_schema,
                            repositories_schema, import_schema, imports_schema,
                            keys_schema, fileset_schema, filesets_schema,
                            image_schema, images_schema, grants_schema,
-                           membership_schema)
+                           membership_schema, rendering_settings_schema)
 from . import premade
 from .utils import to_jsonapi
 
@@ -321,12 +321,15 @@ class Client():
         Returns:
             The image details.
         '''
+        image = self.session.query(Image).outerjoin(Image.rendering_settings) \
+                .filter(Image.uuid == uuid) \
+                .one()
 
-        return to_jsonapi(image_schema.dump(
-            self.session.query(Image)
-            .filter(Image.uuid == uuid)
-            .one()
-        ))
+        return to_jsonapi(image_schema.dump(image),
+            {
+                'rendering_settings': rendering_settings_schema.dump(image.rendering_settings)
+            }
+        )
 
     def get_image_channel_group(self, uuid: str):
         rendering_setting = self.session.query(RenderingSettings) \

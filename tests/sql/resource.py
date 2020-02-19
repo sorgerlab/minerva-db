@@ -381,7 +381,7 @@ class TestImage():
     def test_get_image(self, client, db_image):
         keys = ('uuid', 'name', 'pyramid_levels', 'fileset_uuid')
         d = sa_obj_to_dict(db_image, keys)
-        assert to_jsonapi(d) == client.get_image(db_image.uuid)
+        assert to_jsonapi(d, { 'rendering_settings': []}) == client.get_image(db_image.uuid)
 
     def test_get_image_nonexistant(self, client):
         with pytest.raises(NoResultFound):
@@ -391,7 +391,7 @@ class TestImage():
         image_uuid = db_image.uuid
         with statement_log(connection) as statements:
             client.get_image(image_uuid)
-            assert len(statements) == 1
+            assert len(statements) == 2
 
     def test_list_images_in_fileset(self, client,
                                     user_granted_read_hierarchy):
