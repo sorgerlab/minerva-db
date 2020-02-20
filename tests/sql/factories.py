@@ -106,6 +106,7 @@ class ImageFactory(Factory):
     name = Sequence(lambda n: f'image{n}')
     pyramid_levels = 1
     fileset = SubFactory(FilesetFactory)
+    repository = SubFactory(RepositoryFactory)
 
 
 class RenderingSettingsFactory(Factory):

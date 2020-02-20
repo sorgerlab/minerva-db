@@ -249,7 +249,7 @@ def user_granted_read_hierarchy(session):
     grant = GrantFactory(subject=user, repository=repository)
     import_ = ImportFactory(repository=repository)
     fileset = FilesetFactory(import_=import_)
-    image = ImageFactory(fileset=fileset)
+    image = ImageFactory(fileset=fileset, repository=repository)
     key = KeyFilesetFactory(import_=import_, fileset=fileset)
 
     session.add_all([user, repository, grant, import_, fileset, key, image])
@@ -281,7 +281,7 @@ def group_granted_read_hierarchy(session):
     import_ = ImportFactory(repository=repository)
     fileset = FilesetFactory(import_=import_)
     key = KeyFilesetFactory(import_=import_, fileset=fileset)
-    image = ImageFactory(fileset=fileset)
+    image = ImageFactory(fileset=fileset, repository=repository)
 
     session.add_all([user, group, membership, repository, grant, import_,
                      fileset, key, image])

@@ -336,6 +336,7 @@ class TestFileset():
                                                       images=[d_image])
         image = client.list_images_in_fileset(db_fileset.uuid)
         d_image['fileset_uuid'] = db_fileset.uuid
+        d_image['repository_uuid'] = db_fileset.import_.repository_uuid
         assert to_jsonapi([d_image]) == image
 
     def test_update_fileset_incomplete_with_images(self, client, db_fileset):
@@ -353,12 +354,13 @@ class TestImage():
         create_d = sa_obj_to_dict(image, keys)
         d = sa_obj_to_dict(image, keys)
         d['fileset_uuid'] = db_fileset.uuid
+        d['repository_uuid'] = None
         assert to_jsonapi(d) == client.create_image(
             fileset_uuid=db_fileset.uuid,
             **create_d
         )
         image = session.query(Image).one()
-        keys += ('fileset_uuid',)
+        keys += ('fileset_uuid','repository_uuid')
         assert d == sa_obj_to_dict(image, keys)
         assert db_fileset == image.fileset
 
@@ -379,7 +381,7 @@ class TestImage():
             client.create_image(fileset_uuid='nonexistant', **d)
 
     def test_get_image(self, client, db_image):
-        keys = ('uuid', 'name', 'pyramid_levels', 'fileset_uuid')
+        keys = ('uuid', 'name', 'pyramid_levels', 'fileset_uuid', 'repository_uuid')
         d = sa_obj_to_dict(db_image, keys)
         assert to_jsonapi(d, { 'rendering_settings': []}) == client.get_image(db_image.uuid)
 
@@ -395,7 +397,7 @@ class TestImage():
 
     def test_list_images_in_fileset(self, client,
                                     user_granted_read_hierarchy):
-        keys = ('uuid', 'name', 'pyramid_levels', 'fileset_uuid')
+        keys = ('uuid', 'name', 'pyramid_levels', 'fileset_uuid', 'repository_uuid')
         d = sa_obj_to_dict(user_granted_read_hierarchy['image'], keys)
         assert to_jsonapi([d]) == client.list_images_in_fileset(
             user_granted_read_hierarchy['fileset_uuid']

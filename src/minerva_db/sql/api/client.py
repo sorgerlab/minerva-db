@@ -184,24 +184,30 @@ class Client():
         return to_jsonapi(fileset_schema.dump(fileset))
 
     def create_image(self, uuid: str, name: str, pyramid_levels: int,
-                     fileset_uuid: str) -> SDict:
-        '''Create image within the specified Fileset.
+                     fileset_uuid: str = None, repository_uuid: str = None) -> SDict:
+        '''Create image within the specified Fileset / Repository.
 
         Args:
             uuid : UUID of the image.
             name: Name of the import.
             pyramid_levels: Number of pyramid levels.
             fileset_uuid: UUID of the Fileset.
+            repository_uuid: UUID of the Repository
 
         Returns:
             The newly create image.
         '''
+        fileset = None
+        if fileset_uuid is not None:
+            fileset = self.session.query(Fileset) \
+                .filter(Fileset.uuid == fileset_uuid) \
+                .one()
 
-        fileset = self.session.query(Fileset) \
-            .filter(Fileset.uuid == fileset_uuid) \
-            .one()
+        repository = None
+        if repository_uuid is not None:
+            repository = self.session.query(Repository).filter(Repository.uuid == repository_uuid).one()
 
-        image = Image(uuid, name, pyramid_levels, fileset)
+        image = Image(uuid, name, pyramid_levels, fileset, repository)
         self.session.add(image)
         self.session.commit()
         return to_jsonapi(image_schema.dump(image))
@@ -519,9 +525,7 @@ class Client():
         elif resource_type == 'Image':
             q = (
                 q.join(Grant.repository)
-                .join(Repository.imports)
-                .join(Import.filesets)
-                .join(Fileset.images)
+                .join(Repository.images)
                 .filter(Image.uuid == resource_uuid)
             )
 
@@ -628,6 +632,13 @@ class Client():
             .all()
         ))
 
+    def list_images_in_repository(self, repository_uuid: str) -> List[SDict]:
+        return to_jsonapi(images_schema.dump(
+            self.session.query(Image)
+            .filter(Image.repository_uuid == repository_uuid)
+            .all()
+        ))
+
     def list_keys_in_fileset(self, uuid: str) -> List[SDict]:
         '''List keys in given Fileset.
 
@@ -725,7 +736,7 @@ class Client():
         '''
 
         fileset = (
-            self.session.query(Fileset)
+            self.session.query(Fileset).outerjoin(Import)
             .filter(Fileset.uuid == uuid)
             .one()
         )
@@ -743,7 +754,8 @@ class Client():
             if fileset.complete is False:
                 raise DBError('Images can only be registered to a completed '
                               'Fileset.')
-            images = [Image(**image, fileset=fileset) for image in images]
+
+            images = [Image(**image, fileset=fileset, repository=fileset.import_.repository) for image in images]
             self.session.add_all(images)
 
         self.session.add(fileset)
