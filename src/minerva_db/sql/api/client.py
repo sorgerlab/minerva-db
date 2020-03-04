@@ -856,6 +856,16 @@ class Client():
         self.session.delete(repository)
         self.session.commit()
 
+    def delete_image(self, uuid: str):
+        image = (
+            self.session.query(Image)
+            .filter(Image.uuid == uuid)
+            .one()
+        )
+        # TODO Handle delete of raw/tiled objects in the calling method
+        self.session.delete(image)
+        self.session.commit()
+
     def delete_membership(self, group_uuid: str, user_uuid: str):
         '''Delete a membership.
 
