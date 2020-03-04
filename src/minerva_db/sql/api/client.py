@@ -862,8 +862,8 @@ class Client():
             .filter(Image.uuid == uuid)
             .one()
         )
-        # TODO Handle delete of raw/tiled objects in the calling method
-        self.session.delete(image)
+        # TODO Handle delete of raw/tiled objects in a batch job
+        image.deleted = True
         self.session.commit()
 
     def delete_membership(self, group_uuid: str, user_uuid: str):
