@@ -9,6 +9,7 @@ class User(Subject):
     }
 
     uuid = Column(String(36), ForeignKey(Subject.uuid), primary_key=True)
+    name = Column(String(256))
 
     groups = relationship('Group', viewonly=True, secondary='t_membership')
     memberships = relationship('Membership', back_populates='user')
