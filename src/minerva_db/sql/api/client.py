@@ -52,7 +52,7 @@ class Client():
         self.session.commit()
         return to_jsonapi(group_schema.dump(group))
 
-    def create_user(self, uuid: str) -> SDict:
+    def create_user(self, uuid: str, name: str=None) -> SDict:
         '''Create a user.
 
         Args:
@@ -62,7 +62,7 @@ class Client():
             The newly created user.
         '''
 
-        user = User(uuid)
+        user = User(uuid, name)
         self.session.add(user)
         self.session.commit()
         return to_jsonapi(user_schema.dump(user))
