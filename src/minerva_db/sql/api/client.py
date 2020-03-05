@@ -866,6 +866,15 @@ class Client():
         image.deleted = True
         self.session.commit()
 
+    def restore_image(self, uuid: str):
+        image = (
+            self.session.query(Image)
+            .filter(Image.uuid == uuid)
+            .one()
+        )
+        image.deleted = False
+        self.session.commit()
+
     def delete_membership(self, group_uuid: str, user_uuid: str):
         '''Delete a membership.
 
