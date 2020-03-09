@@ -397,6 +397,14 @@ class Client():
             .one()
         ))
 
+    def find_user(self, search: str):
+        like_parameter = '%' + search + '%'
+        return to_jsonapi(users_schema.dump(
+            self.session.query(User)
+                .filter(User.name.ilike(like_parameter))
+                .all()
+        ))
+
     def get_membership(self, group_uuid: str, user_uuid: str) -> SDict:
         '''Get details of the membership.
 
