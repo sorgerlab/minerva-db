@@ -14,5 +14,6 @@ class User(Subject):
     groups = relationship('Group', viewonly=True, secondary='t_membership')
     memberships = relationship('Membership', back_populates='user')
 
-    def __init__(self, uuid):
+    def __init__(self, uuid, name=None):
         self.uuid = uuid
+        self.name = name

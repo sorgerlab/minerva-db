@@ -1,3 +1,4 @@
+from minerva_db.sql.serializers import users_schema
 from sqlalchemy.orm import Session, joinedload
 from typing import Dict, List, Optional, Union
 from ..models import (User, Group, Membership, Repository, Import,
@@ -565,6 +566,26 @@ class Client():
             grants_schema.dump(grants),
             {
                 'repositories': repositories_schema.dump(repositories)
+            }
+        )
+
+    def list_grants_for_repository(self, uuid: str):
+        q = (
+            self.session.query(Grant)
+                .join(Grant.repository)
+                .filter(Repository.uuid == uuid)
+        )
+        grants = q.all()
+        subject_uuids = [grant.subject_uuid for grant in grants]
+        q = (
+            self.session.query(User)
+            .filter(User.uuid.in_(subject_uuids))
+        )
+        users = q.all()
+        return to_jsonapi(
+            grants_schema.dump(grants),
+            {
+                'users': users_schema.dump(users)
             }
         )
 
