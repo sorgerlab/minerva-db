@@ -938,3 +938,13 @@ class Client():
 
         self.session.delete(membership)
         self.session.commit()
+
+    def delete_grant(self, subject_uuid, resource_uuid):
+        grant = (
+            self.session.query(Grant)
+            .filter(Grant.repository_uuid == resource_uuid)
+            .filter(Grant.subject_uuid == subject_uuid)
+            .one()
+        )
+        self.session.delete(grant)
+        self.session.commit()
