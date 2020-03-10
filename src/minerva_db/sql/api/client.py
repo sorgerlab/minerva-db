@@ -1,4 +1,5 @@
-from minerva_db.sql.serializers import users_schema
+from minerva_db.sql.models import Subject
+from minerva_db.sql.serializers import users_schema, grant_schema, groups_schema
 from sqlalchemy.orm import Session, joinedload
 from typing import Dict, List, Optional, Union
 from ..models import (User, Group, Membership, Repository, Import,
@@ -242,50 +243,49 @@ class Client():
         self.session.add_all(s3_keys)
         self.session.commit()
 
-    # TODO Is this used? It does not use serialized response
-    # TODO Make grant creation more standalone with external exposure?
-    # def grant_repository_to_subject(self, repository_uuid, subject_uuid,
-    #                                 permission: str) -> SDict:
-    #     '''Grant the specified repository to the specified subject.
-    #
-    #     Args:
-    #         repository_uuid: UUID of the repository.
-    #         subject_uuid: UUID of the subject.
-    #         permission: Permission to grant the group
-    #
-    #     Returns:
-    #         The grant that was created or updated.
-    #     '''
-    #
-    #     # TODO Get from enumeration in model or potentially catch
-    #     # psycopg2.DataError and rely on database to check
-    #     if permission not in ['Read', 'Write', 'Admin']:
-    #         raise ValueError(f'Specified permission invalid: {permission}')
-    #
-    #     grant = self.session.query(Grant) \
-    #         .filter(Grant.repository_uuid == repository_uuid) \
-    #         .filter(Grant.subject_uuid == subject_uuid) \
-    #         .one_or_none()
-    #
-    #     # No existing grant exists
-    #     if grant is None:
-    #         repository = self.session.query(Repository) \
-    #             .filter(Repository.uuid == repository_uuid) \
-    #             .one()
-    #
-    #         subject = self.session.query(Subject) \
-    #             .filter(Subject.uuid == subject_uuid) \
-    #             .one()
-    #
-    #         grant = Grant(subject, repository, permission)
-    #         self.session.add(grant)
-    #
-    #     # Grant exists, so potentially update permission
-    #     else:
-    #         grant.permission = permission
-    #
-    #     self.session.commit()
-    #     return grant
+    def grant_repository_to_subject(self, repository_uuid, subject_uuid,
+                                    permission: str) -> SDict:
+        '''Grant the specified repository to the specified subject.
+
+        Args:
+            repository_uuid: UUID of the repository.
+            subject_uuid: UUID of the subject.
+            permission: Permission to grant the group
+
+        Returns:
+            The grant that was created or updated.
+        '''
+
+        # TODO Get from enumeration in model or potentially catch
+        # psycopg2.DataError and rely on database to check
+        permission = permission.capitalize()
+        if permission not in ['Read', 'Write', 'Admin']:
+            raise ValueError(f'Specified permission invalid: {permission}')
+
+        grant = self.session.query(Grant) \
+            .filter(Grant.repository_uuid == repository_uuid) \
+            .filter(Grant.subject_uuid == subject_uuid) \
+            .one_or_none()
+
+        # No existing grant exists
+        if grant is None:
+            repository = self.session.query(Repository) \
+                .filter(Repository.uuid == repository_uuid) \
+                .one()
+
+            subject = self.session.query(Subject) \
+                .filter(Subject.uuid == subject_uuid) \
+                .one()
+
+            grant = Grant(subject, repository, permission)
+            self.session.add(grant)
+
+        # Grant exists, so potentially update permission
+        else:
+            grant.permission = permission
+
+        self.session.commit()
+        return to_jsonapi(grant_schema.dump(grant))
 
     def get_fileset(self, uuid: str) -> SDict:
         '''Get details of the specified Fileset.
@@ -402,6 +402,14 @@ class Client():
         return to_jsonapi(users_schema.dump(
             self.session.query(User)
                 .filter(User.name.ilike(like_parameter))
+                .all()
+        ))
+
+    def find_group(self, search: str):
+        like_parameter = '%' + search + '%'
+        return to_jsonapi(groups_schema.dump(
+            self.session.query(Group)
+                .filter(Group.name.ilike(like_parameter))
                 .all()
         ))
 
