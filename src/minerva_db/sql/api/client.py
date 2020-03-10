@@ -592,16 +592,25 @@ class Client():
                 .filter(Repository.uuid == uuid)
         )
         grants = q.all()
+
         subject_uuids = [grant.subject_uuid for grant in grants]
         q = (
             self.session.query(User)
             .filter(User.uuid.in_(subject_uuids))
         )
         users = q.all()
+
+        q = (
+            self.session.query(Group)
+            .filter(Group.uuid.in_(subject_uuids))
+        )
+        groups = q.all()
+
         return to_jsonapi(
             grants_schema.dump(grants),
             {
-                'users': users_schema.dump(users)
+                'users': users_schema.dump(users),
+                'groups': groups_schema.dump(groups)
             }
         )
 
