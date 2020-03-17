@@ -87,6 +87,13 @@ class TestGrants():
                                          'Read')
         assert True is decision
 
+    def test_image_standalone(self, client, fixture_name, standalone_image_permissions_admin):
+        user_uuid = standalone_image_permissions_admin['user'].uuid
+        image_uuid = standalone_image_permissions_admin['image'].uuid
+        decision = client.has_permission(user_uuid, 'Image', image_uuid,
+                                         'Admin')
+        assert True is decision
+
     def test_image_insufficent(self, client, fixture_name, request):
         hierarchy = request.getfixturevalue(fixture_name)
         user_uuid = hierarchy['user'].uuid

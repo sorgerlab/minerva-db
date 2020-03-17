@@ -1,9 +1,8 @@
-from minerva_db.sql.models import Subject
 from minerva_db.sql.serializers import users_schema, grant_schema, groups_schema
 from sqlalchemy.orm import Session, joinedload
 from typing import Dict, List, Optional, Union
 from ..models import (User, Group, Membership, Repository, Import,
-                      Fileset, Image, Key, Grant, RenderingSettings)
+                      Fileset, Image, Key, Grant, RenderingSettings, Subject)
 from ..serializers import (user_schema, group_schema, repository_schema,
                            repositories_schema, import_schema, imports_schema,
                            keys_schema, fileset_schema, filesets_schema,
@@ -22,10 +21,10 @@ SDict = Dict[str, Union[str, float, int]]
 
 class Client():
 
-    def __init__(self, session: Session):
+    def __init__(self, session):
         self.session = session
 
-    def _session(self) -> Session:
+    def _session(self):
         '''Get session.
 
         Returns:

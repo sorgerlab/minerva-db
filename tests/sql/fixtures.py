@@ -303,3 +303,28 @@ def group_granted_read_hierarchy(session):
         'image': image,
         'image_uuid': image.uuid
     }
+
+@pytest.fixture
+def standalone_image_permissions_admin(session):
+    user = UserFactory()
+    group = GroupFactory()
+    membership = MembershipFactory(group=group, user=user,
+                                   membership_type='Member')
+    repository = RepositoryFactory()
+    grant = GrantAdminFactory(subject=group, repository=repository)
+    image = ImageFactory(fileset=None, repository=repository)
+
+    session.add_all([user, group, membership, repository, grant, image])
+    session.commit()
+    return {
+        'user': user,
+        'user_uuid': user.uuid,
+        'group': group,
+        'group_uuid': group.uuid,
+        'membership': membership,
+        'repository': repository,
+        'repository_uuid': repository.uuid,
+        'grant': grant,
+        'image': image,
+        'image_uuid': image.uuid
+    }
