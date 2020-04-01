@@ -808,7 +808,7 @@ class Client():
         return to_jsonapi(fileset_schema.dump(fileset))
 
     def update_repository(self, uuid: str, name: Optional[str] = None,
-                          raw_storage: Optional[str] = None) -> SDict:
+                          raw_storage: Optional[str] = None, access: Optional[str] = None) -> SDict:
         '''Update a repository.
 
         Args:
@@ -817,6 +817,7 @@ class Client():
                 update.
             raw_storage: Updated storage level of the raw data. Default: `None`
                 for no update.
+            access: Access level of repository: "Private", "PublicRead" or "PublicWrite"
 
         Returns:
             The updated repository.
@@ -833,6 +834,9 @@ class Client():
 
         if raw_storage is not None:
             repository.raw_storage = raw_storage
+
+        if access is not None:
+            repository.access = access
 
         # TODO Handle storage level retrospectively in the calling method
         # Live -> Archive (Tag all objects as project:archive to lifecycle)
