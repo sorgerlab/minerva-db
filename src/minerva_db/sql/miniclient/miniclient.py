@@ -39,15 +39,14 @@ class MiniClient:
 
         return q_groups.union(q_user)
 
-    def has_permission(self, user_uuid: str, resource_type: str,
-                       resource_uuid: str,
+    def has_image_permission(self, user_uuid: str,
+                       image_uuid: str,
                        permission='Read') -> bool:
-        '''Determine if a user has a required permission on a given resource.
+        '''Determine if a user has a required permission on a given image.
 
         Args:
             user_uuid: UUID of the user.
-            resource_type: Type of the resource.
-            resource_uuid: UUID of the resource.
+            image_uuid: UUID of the Image.
             permission: Sought permission. Defaults to 'Read'
 
         Returns:
@@ -73,12 +72,11 @@ class MiniClient:
                 .filter(Grant.subject_uuid.in_(q_subject_uuids))
         )
 
-        if resource_type == 'Image':
-            q = (
-                q.join(Grant.repository)
-                    .join(Repository.images)
-                    .filter(Image.uuid == resource_uuid)
-            )
+        q = (
+            q.join(Grant.repository)
+                .join(Repository.images)
+                .filter(Image.uuid == image_uuid)
+        )
 
         # Only existance of results required
         q = q.exists()
