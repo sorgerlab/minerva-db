@@ -19,12 +19,12 @@ class DBError(Exception):
 SDict = Dict[str, Union[str, float, int]]
 
 
-class Client():
+class Client:
 
-    def __init__(self, session):
-        self.session = session
+    def __init__(self, session: Session):
+        self.session: Session = session
 
-    def _session(self):
+    def _session(self) -> Session:
         '''Get session.
 
         Returns:
@@ -185,6 +185,7 @@ class Client():
         return to_jsonapi(fileset_schema.dump(fileset))
 
     def create_image(self, uuid: str, name: str, pyramid_levels: int,
+                     format, compression, tile_size, rgb=False,
                      fileset_uuid: str = None, repository_uuid: str = None) -> SDict:
         '''Create image within the specified Fileset / Repository.
 
@@ -208,7 +209,7 @@ class Client():
         if repository_uuid is not None:
             repository = self.session.query(Repository).filter(Repository.uuid == repository_uuid).one()
 
-        image = Image(uuid, name, pyramid_levels, fileset, repository)
+        image = Image(uuid, name, pyramid_levels, format, compression, tile_size, fileset, repository, rgb)
         self.session.add(image)
         self.session.commit()
         return to_jsonapi(image_schema.dump(image))
