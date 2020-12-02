@@ -209,7 +209,7 @@ class Client:
         if repository_uuid is not None:
             repository = self.session.query(Repository).filter(Repository.uuid == repository_uuid).one()
 
-        image = Image(uuid, name, pyramid_levels, format, compression, tile_size, fileset, repository, rgb)
+        image = Image(uuid, name, pyramid_levels, format, compression, tile_size, repository, fileset, rgb)
         self.session.add(image)
         self.session.commit()
         return to_jsonapi(image_schema.dump(image))
