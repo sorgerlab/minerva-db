@@ -16,13 +16,14 @@ class Image(Base):
     compression = Column(String(256), nullable=True)
     tile_size = Column(Integer, nullable=False)
     rgb = Column(Boolean, nullable=False)
+    pixel_type = Column(String(256), nullable=True)
 
     fileset = relationship('Fileset', back_populates='images')
     repository = relationship('Repository', back_populates='images')
     rendering_settings = relationship('RenderingSettings', back_populates='image',
                           cascade='all, delete-orphan')
 
-    def __init__(self, uuid, name, pyramid_levels, format, compression, tile_size, fileset, repository, rgb=False):
+    def __init__(self, uuid, name, pyramid_levels, format, compression, tile_size, repository, fileset=None, rgb=False, pixel_type="uint16"):
         self.uuid = uuid
         self.name = name
         self.pyramid_levels = pyramid_levels
@@ -33,3 +34,4 @@ class Image(Base):
         self.compression = compression
         self.tile_size = tile_size
         self.rgb = rgb
+        self.pixel_type = pixel_type

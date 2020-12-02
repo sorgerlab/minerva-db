@@ -5,6 +5,10 @@ from minerva_db.sql.models.grant import Grant
 from minerva_db.sql.models.renderingsettings import RenderingSettings
 from sqlalchemy.sql.expression import literal
 
+# Minimal database client for tile rendering API
+# The goal is to have minimal functionality / imports so that the
+# lambda cold start time of the tile rendering API would be smaller.
+# (api.client.Client imports everything, which takes too much time)
 class MiniClient:
 
     def __init__(self, session):
@@ -78,7 +82,7 @@ class MiniClient:
                 .filter(Image.uuid == image_uuid)
         )
 
-        # Only existance of results required
+        # Only existence of results required
         q = q.exists()
 
         return self.session.query(q).scalar()
